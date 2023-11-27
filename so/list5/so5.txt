@@ -1,0 +1,210 @@
+
+
+
+
+
+
+
+
+zad.1 
+
+jendokierunkowe - kierunek przekazywania danych jest okreslony tzn. niemozliwy jest zapis danych uzywajac desktryptora plikow do odczytu i na odwrot
+
+bufor - obszar danych do tymczasowego przechowywania danych przed ich odczytem
+W strukturze FILE każdego strumienia jeden bufor.
+void setbuf(FILE *stream, char *buf);
+int setvbuf(FILE *stream, char *buf, int mode, size_t size);
+
+
+?? Co robi operacja read(2) i write(2), jeśli bufor rury jest odpowiednio pusty albo pełny?
+
+pipe(7)
+If a process attempts to read from an empty pipe, then read(2) will block until data is available.
+If a process attempts to write to a full  pipe  (see below), then write(2) blocks until sufficient data has been read from the pipe to allow the write  to  complete.
+
+
+?? Jakie gwarancje daje nam operacja write na rurze, do której pisze wiele procesów – każdy z nich wiersze tekstu nie dłuższe niż «PIPE_BUF»?
+
+POSIX.1 says that write(2)s of less than PIPE_BUF bytes must be atomic
+
+
+?? Weźmy potok utworzony poleceniem «ps -ef | grep sh | wc -l». Czemu wszystkie procesy należące do potoku zakończą się bez interwencji powłoki, jeśli co najmniej jeden z nich umrze?
+
+If all file descriptors referring to the write end of a pipe have been closed, then an attempt to read(2) from the pipe will see end-of-file (read(2) will return 0).  If all file descriptors  referring
+       to  the  read  end  of a pipe have been closed, then a write(2) will cause a SIGPIPE signal to be generated for the calling process.  If the calling process is ignoring this signal, then write(2) fails
+       with the error EPIPE.  An application that uses pipe(2) and fork(2) should use suitable close(2) calls to close unnecessary duplicate file descriptors; this ensures that end-of-file  and  SIGPIPE/EPIPE
+       are delivered when appropriate.
+Domyślną akcją dla nieobsłużonego SIGPIPE jest zakończenie procesu.
+
+
+?? Kiedy operacje read i write na rurze zwracają „short count”?
+
+read(2)
+On success, the number of bytes read is returned (zero indicates end of file), and the file position is advanced by this number.  It is not an error if this number is smaller than the number  of  bytes
+       requested;  this  may happen for example because fewer bytes are actually available right now (maybe because we were close to end-of-file, or because we are reading from a pipe, or from a terminal), or
+       because read() was interrupted by a signal.
+
+write(2)
+Note that a successful write() may transfer fewer than count bytes.  Such partial writes can occur for various reasons; for example, because there was insufficient space on the disk device to write all
+       of  the requested bytes, or because a blocked write() to a socket, pipe, or similar was interrupted by a signal handler after it had transferred some, but before it had transferred all of the requested
+       bytes.  In the event of a partial write, the caller can make another write() call to transfer the remaining bytes.  The subsequent call will either transfer further bytes or  may  result  in  an  error
+       (e.g., if the disk is now full).
+
+
+?? Jak można połączyć rodzica i dziecko rurą, która została utworzona po uruchomieniu dziecka?
+
+the linux programming interface s. 894:
+
+However, pipes can be used for communica-
+tion between any two (or more) related processes, as long as the pipe was created
+by a common ancestor before the series of fork() calls that led to the existence of
+the processes.
+
+A common scenario is that a
+pipe is used for communication between two siblings—their parent creates the pipe,
+and then creates the two children. This is what the shell does when building a pipeline.
+
+ale the linux programming interface s. 906:
+
+Semantically, a FIFO is similar to a pipe. The principal difference is that a FIFO has
+a name within the file system and is opened in the same way as a regular file. This
+allows a FIFO to be used for communication between unrelated processes (e.g., a
+client and server).
+
+mkfifo(3)
+A  FIFO special file is similar to a pipe, except that it is created in
+       a different way.  Instead of being an anonymous communications channel,
+       a FIFO special file is entered into the filesystem by calling mkfifo().
+
+       Once  you have created a FIFO special file in this way, any process can
+       open it for reading or writing, in the same way as  an  ordinary  file.
+
+
+
+
+
+
+
+
+
+PRZECZYTAC LINKA I DO RESZTY TO JAKOS NIE DO KONCA CZUJE
+zad.2
+
+urządzenia znakowe - handle data on a character-by-character basis. Terminals and
+keyboards are examples of character devices.
+
+urządzenia blokowe - handle data a block at a time. The size of a block depends on the
+type of device, but is typically some multiple of 512 bytes. Examples of block
+devices include disks and tape drives.
+ata
+
+								input output control
+??  Do czego służy wywołanie systemowe ioctl(2)? Zauważ, że stosowane jest głównie do plików urządzeń znakowych lub blokowych
+
+Within a classical Unix model of the world, the only way to extend the everything-is-a-byte-stream metaphor is through ioctl calls.
+The ioctl() system call is a general-purpose mechanism for performing file and
+device operations that fall outside the universal I/O model described earlier in this
+chapter.
+
+The ioctl() system call manipulates the underlying device parameters of special files.
+
+
+?? Na podstawie pliku ioccom.h2 wyjaśnij znaczenie drugiego i trzeciego parametru wywołania ioctl.
+
+#include <sys/ioctl.h>
+int ioctl(int fd, int request, ... /* argp */);
+
+Value returned on success depends on request, or –1 on error
+
+The fd argument is an open file descriptor for the device or file upon which the
+control operation specified by request is to be performed. Device-specific header
+files define constants that can be passed in the request argument.
+
+     38  * Ioctl's have the command encoded in the lower word, and the size of
+     39  * any in or out parameters in the upper word.  The high 3 bits of the
+     40  * upper word are used to encode the in/out status of the parameter.
+     41  *
+     42  *	 31 29 28                     16 15            8 7             0
+     43  *	+---------------------------------------------------------------+
+     44  *	| I/O | Parameter Length        | Command Group | Command       |
+     45  *	+---------------------------------------------------------------+
+     46  */
+
+... /* argp */ zapewne char *argp z parametrami do zakodowanego polecenia w request
+
+w pliku w _IOC widzimy w jaki sposob tworzony jest request
+
+
+?? Używając przeglądarki kodu3 jądra NetBSD znajdź definicje operacji «DIOCEJECT», «KIOCTYPE» i «SIOCGIFCONF», a następnie wytłumacz co one robią.
+
+#define DIOCEJECT	_IOW('d', 112, int)	/* eject removable disk */ - wysuwa dysk zewnętrzny
+
+#define	KIOCTYPE	_IOR('k', 9, int)	/* get keyboard type */ - pobiera typ klawiatury
+
+#define	SIOCGIFCONF	_IOWR('i', 38, struct ifconf)	/* get ifnet list */ - pobiera listę ifnet (interfejsy sieciowe)
+
+
+
+
+
+
+
+
+
+zad.3
+
+kompaktowanie - "sciskanie" rekordow katalogu z prawej strony na lewa, pozbywajac sie przy tym nieuzytkow 
+
+nieuzytki - powstaja w wyniku usunieca rekordu z katalogu i przemiecia wskaznika konca rekordu w rekordzie przed tym usunietym
+
+
+?? Przedstaw reprezentację katalogu, a następnie wyjaśnij jak przebiegają operacje usuwania i dodawania pliku
+
+Modern Operating Ssytems - page 777
+
+getdents(2)
+
+
+?? W pierwszym przypadku rozważ scenariusz, w którym w reprezentacji katalogu za lub przed usuwanym wpisem istnieją nieużytki.
+
+Modern Operating Ssytems - page 777
+
+
+?? W drugim, kiedy w pliku katalogu nie udaje się znaleźć wystarczająco dużo miejsca na przechowanie wpisu. Jądro leniwie wykonuje operację kompaktowania na katalogach – kiedy opłaca się ją zrobić?
+
+Oplaca sie robic, jezeli wiadomo ze w katalogu jest duzo nieuzytkow
+W przypadku gdy operacja kompaktowania jest niewystarczajaca ssytem plikow moze utworzyc nowy blok katalogu i zaktualizowac jego strukture inode-a sa chyba jeszcze inne mozliwosci
+
+
+
+
+
+
+
+
+
+zad.5
+
+Setuid umożliwia programowi dziedziczenie uprawnień użytkownika, który jest właścicielem pliku. W praktyce, kiedy użytkownik uruchamia plik z ustawionym bitem setuid, program działa z uprawnieniami właściciela pliku, niezależnie od tego, kto go uruchomił.
+
+Setgid umożliwia programowi dziedziczenie uprawnień grupy właściciela pliku. Program uruchamiany z ustawionym bitem setgid będzie działał z uprawnieniami grupy właściciela pliku, niezależnie od tego, kto go uruchomił.
+
+
+The sticky bit (S_ISVTX) on a directory means that a file in that directory can be renamed or deleted only by the owner of the file, by the owner of the directory, and by a privileged process.
+
+Iformacje o maskach mamy w INODE(7)
+niekotre info rowniez w STAT(2)
+
+A device ID consists of two parts: a major ID, identifying the class of the device, and a minor ID, identifying a specific instance of a device in that class.  A device ID is represented using the type
+       dev_t.
+
+
+
+
+
+
+
+NTF 
+debugfs
+e2fsck /-D
+ryzer ssytem plikow

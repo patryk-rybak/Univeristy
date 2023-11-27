@@ -1,0 +1,284 @@
+zad. 1
+
+tozsamosc - okreslana przez indentyfikatory: real id, effective id, saved-set id
+
+
+
+?? (a) setuid(2000)
+setuid()  sets  the  effective  user ID of the calling process.  If the
+       calling process is privileged (more precisely: if the process  has  the
+       CAP_SETUID  capability  in  its user namespace), the real UID and saved
+       set-user-ID are also set.
+
+
+ruid=1000, euid=0, suid=0
+ruid=2000, euid=2000, suid=2000
+
+?? (b) setreuid(-1, 2000)
+setreuid() sets real and effective user IDs of the calling process.
+
+       Supplying a value of -1 for either the real or effective user ID forces the system to leave that ID unchanged.
+
+       Unprivileged processes may only set the effective user ID to the real user ID, the effective user ID, or the saved set-user-ID.
+
+       Unprivileged users may only set the real user ID to the real user ID or the effective user ID.
+
+       If the real user ID is set (i.e., ruid is not -1) or the effective user ID is set to a value not equal to the previous real user ID, the saved set-user-ID will be set to the new effective user ID.
+
+       Completely analogously, setregid() sets real and effective group ID's of the calling process, and all of the above holds with "group" instead of "user".
+
+
+ruid=1000, euid=0, suid=0
+ruid=1000, euid=2000, suid=2000
+(jezli uid albo eudi zmienia sie na cos innego od uid to suid tez sie zmeinia)
+
+
+?? (c) seteuid(2000)
+seteuid() sets the effective user ID of the calling process.  Unprivileged processes may only set the effective user ID to the real user ID, the effective user ID or the saved set-user-ID.
+
+       Precisely the same holds for setegid() with "group" instead of "user".
+
+ruid=1000, euid=0, suid=0
+ruid=1000, euid=2000, suid=0
+
+
+?? (d) setresuid(-1, 2000, 3000)
+setresuid() sets the real user ID, the effective user ID, and the saved set-user-ID of the calling process.
+
+       An unprivileged process may change its real UID, effective UID, and saved set-user-ID, each to one of: the current real UID, the current effective UID or the current saved set-user-ID.
+
+       A privileged process (on Linux, one having the CAP_SETUID capability) may set its real UID, effective UID, and saved set-user-ID to arbitrary values.
+
+
+ruid=1000, euid=0, suid=0
+ruid=1000, euid=2000, suid=3000
+
+
+?? Czy proces z tożsamością ruid=0, euid=1000, suid=1000 jest uprzywilejowany? Odpo
+
+Nie jest, ale mozemy to bez problemu zmienic:
+seteuid() sets the effective user ID of the calling process.  Unprivileged processes may only set the effective user ID to the real user ID, the effective user ID or the saved set-user-ID.
+
+
+
+
+
+zad. 2
+
+?? Jaką rolę pełnią bity uprawnień «rwx» dla katalogów w systemach uniksowych?
+
+r - uprawnienia do wczytania rekordow katakogu
+w - uprawnienia do modyfikacji katalogu tzn, dodanie / usuniecie rekordu
+x - uprawnienia do dostania sie do katalogu (search bit) 
+
+
+?? Opisz znaczenie bitów «set-gid» i «sticky» dla katalogów.
+
+set-gid - 
+The  set-group-ID bit (S_ISGID) has several special uses.  For a directory, it indicates that BSD semantics are to be used for that directory: files created there inherit their group ID from the direc‐
+       tory, not from the effective group ID of the creating process, and directories created there will also get the S_ISGID bit set.
+
+sticky - 
+The sticky bit (S_ISVTX) on a directory means that a file in that directory can be renamed or deleted only by the owner of the file, by the owner of the directory, and by a privileged process.
+
+
+?? Napisz w pseudokodzie i zreferuj procedurę «bool my_access(struct stat *sb, int mode)»
+
+access()  checks  whether the calling process can access the file path‐
+       name.  If pathname is a symbolic link, it is dereferenced.
+The mode specifies the accessibility check(s) to be performed,  and  is
+       either the value F_OK, or a mask consisting of the bitwise OR of one or
+       more of R_OK, W_OK, and X_OK.  F_OK tests  for  the  existence  of  the
+       file.   R_OK,  W_OK,  and  X_OK test whether the file exists and grants
+       read, write, and execute permissions, respectively.
+The check is done using the calling process's real UID and GID,  rather
+       than the effective IDs as is done when actually attempting an operation
+       (e.g., open(2)) on the file.  Similarly, for the root user,  the  check
+       uses the set of permitted capabilities rather than the set of effective
+       capabilities; and for non-root users, the check uses an  empty  set  of
+       capabilities.
+This  allows  set-user-ID  programs  and capability-endowed programs to
+       easily determine the invoking user's authority.  In  other  words,  ac‐
+       cess()  does not answer the "can I read/write/execute this file?" ques‐
+       tion.  It answers a slightly different question: "(assuming I'm  a  se‐
+       tuid  binary)  can  the  user  who  invoked  me read/write/execute this
+       file?", which gives set-user-ID programs the possibility to prevent ma‐
+       licious  users from causing them to read files which users shouldn't be
+       able to read.
+
+pseudokod zad2
+
+
+?? Rozważ uprawnienia katalogu «/usr/local» i «/tmp».
+
+/tmp - Access: (1777/drwxrwxrwt)
+/usr/local - Access: (0755/drwxr-xr-x)
+
+
+
+
+
+
+zad. 3
+
+stat /usr/bin/su
+
+ls -l  /usr/bin/su
+
+
+?? Jaką tożsamość będzie miał na początku proces wykonujący «su», jeśli przed execve(2) było euid=1000?
+
+ruid = 1000/ruid_poprzedniego, euid = 0, suid = 0
+(zakladam ze proces wywolujacy jest unprivileged wiec poczatkowo eudi posiada te samo wartosc co ruid lub suid)
+
+
+?? Zreferuj działanie uproszczonej wersji programu su1 zakładając, że wszystkie wywołania systemowe kończą
+się bez błędów, a użytkownik zdołał się uwierzytelnić
+
+GETPWNAM(3) -
+The  getpwnam() function returns a pointer to a structure containing the broken-out fields of the record in the password database (e.g., the local password file /etc/passwd, NIS, and LDAP) that matches
+       the username name.
+struct passwd {
+               char   *pw_name;       /* username */
+               char   *pw_passwd;     /* user password */
+               uid_t   pw_uid;        /* user ID */
+               gid_t   pw_gid;        /* group ID */
+               char   *pw_gecos;      /* user information */
+               char   *pw_dir;        /* home directory */
+               char   *pw_shell;      /* shell program */
+           };
+
+getpass - 
+This function is obsolete.  Do not use it.  If you want to read input without terminal echoing enabled, see the description of the ECHO flag in termios(3).
+
+       The  getpass()  function  opens /dev/tty (the controlling terminal of the process), outputs the string prompt, turns off echoing, reads one line (the "password"), restores the terminal state and closes
+       /dev/tty again.
+
+pw_check - 
+Sprawdza poprawnosc hasla
+
+INITGROUPS(3) - 
+The  initgroups()  function  initializes  the group access list by reading the group database /etc/group and using all groups of which user is a member.  The additional group group is also added to the
+       list.
+
+       The user argument must be non-NULL.
+
+SETENV(3) -
+The setenv() function adds the variable name to the environment with the value value, if name does not already exist. If name does exist in the environment, then its value is changed to value if over‐
+       write is nonzero; if overwrite is zero, then the value of name is not change
+
+
+teraz do loginu
+
+GETENV(3) - 
+The getenv() function searches the environment list to find the environment variable name, and returns a pointer to the corresponding value string.
+
+czyli w sumie -l decyduje o tym czy zmienimy katalog na domowy czy nie
+
+
+
+
+
+zad. 4
+
+?? Na podstawie §38.2 i §38.3 wyjaśnij czemu programy uprzywilejowane należy projektować w taki sposób, by operowały z najmniejszym możliwym zestawem upoważnień (ang. the least privilege).
+
+The safest practice is to drop privileges immediately on program startup, and
+then temporarily reacquire them as needed at later points in the program. If, at a
+certain point, privileges will never be required again, then the program should
+drop them irreversibly, by ensuring that the saved set-user-ID is also changed. This
+eliminates the possibility of the program being tricked into reacquiring privilege,
+perhaps via the stack-crashing technique described in Section 38.9.
+
+problem buffer crushing / overflow -> stuck smashing / crashing
+
+gets() abo scanf() nie przejmuja sie liczba zapisywanych bajtow co daje mozliwosc zapisania podolnego ciagu bajtow na stosie i zmuszenie uprzywilejowanego programu do wykonania dowolnego kodu
+
+... 
+
+
+?? Zreferuj wytyczne dotyczące projektowania takich programów
+
+- na poczatku programu nalezy porzucic uprawnienia zmieniajac euid i przywracac jedynie w razie potrzeby
+
+- jesli euid = 0 ale CAP_SETUID jest disabled wtedy zmiana user IDs sie nie powiedzie lub powiedize sie polowicznie bez powiadomienia nas o tym
+dlatego po kazdym syscallu wplywajacym na user IDs nalezy sprawdzac czy faktycznie doszlo do zmiany
+
+- niektore zmiany poswiadczen wymagaja euid = 0. Therefore, when changing multiple IDs—supplementary group IDs,
+group IDs, and user IDs—we should drop the privileged effective user ID last
+when dropping privileged IDs. Conversely, we should raise the privileged effec-
+tive user ID first when raising privileged IDs.
+
+
+?? Zapoznaj się z §39.1 i wytłumacz czemu standardowy
+zestaw funkcji systemu uniksowego do implementacji programów uprzywilejowanych jest niewystarczający.
+Jak starają się to naprawić zdolności (ang. capabilities)?
+
+C A P A B I L I T I E S
+This chapter describes the Linux capabilities scheme, which divides the traditional
+all-or-nothing UNIX privilege scheme into individual capabilities that can be inde-
+pendently enabled or disabled. Using capabilities allows a program to perform
+some privileged operations, while preventing it from performing others.
+
+Rather than
+using a single privilege (i.e., effective user ID of 0) when performing security
+checks in the kernel, the superuser privilege is divided into distinct units, called
+capabilities. Each privileged operation is associated with a particular capability, and
+a process can perform that operation only if it has the corresponding capability
+(regardless of its effective user ID).
+
+
+	
+
+
+?? Dla nieuprzywilejowanego procesu posiadającego
+zdolności «CAP_DAC_READ_SEARCH» i «CAP_KILL» jądro pomija sprawdzanie upoważnień do wykonywania
+pewnych akcji – wymień je`
+
+CAP_DAC_READ_SEARCH - 
+Bypass file read permission checks and directory read and execute (search)
+permission checks
+
+CAP_KILL - 
+Bypass permission checks for sending signals (kill(), sigqueue()) ( sigqueue - queue a signal and data to a process)
+
+
+?? Kiedy proces użytkownika może wysłać sygnał do innego procesu? 20.5
+
+A privileged (CAP_KILL) process may send a signal to any process.
+
+An unprivileged process can send a signal to another process if the real or
+effective user ID of the sending process matches the real user ID or saved set-
+user-ID of the receiving process. This rule allows users
+to send signals to set-user-ID programs that they have started, regardless of the
+current setting of the target process’s effective user ID
+
+
+
+
+zad. 5
+Jakie zadania pełni procedura exit(3) z biblioteki standardowej?
+
+The  exit()  function  causes  normal process termination and the least
+       significant byte of status (i.e., status & 0xFF)  is  returned  to  the
+       parent (see wait(2)).
+
+All open stdio(3) streams are flushed and closed.  Files created by tmpfile(3) are removed.
+fflush()
+
+?? Opisz problemy z buforowaniem
+plików, które mogą wystąpić dla strumieni biblioteki stdio(3) w przypadku użycia wywołań fork(2),
+execve(2) i _exit(2)
+
+fork(2) - bufory zostaja odziedziczone przez dziecko
+
+execve(2) - zastepowany jest caly address space w tym tez cale bufory
+
+_exit(2) - bufor nie zostaje przeslany do jadra, zostaje stracony
+
+
+Jak zapobiec tym problemom?
+
+...
+
+

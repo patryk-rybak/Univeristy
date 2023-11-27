@@ -1,0 +1,250 @@
+zad 1
+
+osierocony - proces jest osierocony, jezeli jego proces-rodzic zostal zakonczony.
+
+zadanie drugoplanowe - grupa procesow wykonujaca sie w tle. Aby uruchomic program w tle na koniec polecenia nalezy dodac &. Aby przeniesc proces do background-u do foreground-u uzywamy polecenia fg oraz gf respectively.
+
+lider sesji - jest z reguły proces powłoki. Żeby zostać liderem sesji należy utworzyć sesję setsid i ustalić terminal sterujący tcsetsid.
+
+sesja -  to pewna liczba grup procesów podłączonych do tego samego terminala sterującego
+
+terminal sterujacy - może należeć do co najwyżej jednej sesji – można wyświetlić bieżący poleceniem ‘tty’
+
+
+
+Odnosnie ppid sleep-a po zabisiu powloki:
+
+The systemd user instance is responsible for managing user services, which can be used to run daemons or automated tasks with all the benefits of systemd, such as socket activation, timers, dependency system, and strict process control via cgroups. 
+
+
+
+
+
+zad 2
+
+tryb kanoniczny - in this mode, terminal input is processed as lines. The terminal driver returns at most one line per read request.
+
+kolejka wejscia -  Each terminal device file has associated with it an input queue, into which incoming data is stored by the system before being read by a process.
+
+kolejka wyjscia - bufor gromadzacy dane wyjściowe generowane przez programy działające w terminalu. Dane przesyłane z kolejki wyjścia do terminala, który wyświetla je na ekranie użytkownika
+
+
+Jak zachowuje sie sterownik terminala w trybie kanonicznym?
+
+ In canonical mode input processing, terminal input is processed in units
+     of lines.  A line is delimited by a newline `\n' character, an end-of-
+     file (EOF) character, or an end-of-line (EOL) character. This means that
+     a read request will not return until an entire line has been typed, or a
+     signal has been received.  Also, no matter how many bytes are requested
+     in the read call, at most one line is returned. It is not, however, nec-
+     essary to read a whole line at once; any number of bytes, even one, may
+     be requested in a read without losing information.
+
+
+
+Posługując się rysunkiem [1, 62-1] wytłumacz w jaki sposób przetwarza on znaki (w tym kody sterujące) wchodzące do kolejki wejściowej i kolejki wyjściowej
+
+- urzadzenie terminala pzrekazuje znaki do kolejki wejsciowej
+- jezli wlaczone jest echo to znaki dodawane sa od razu do kolejki wyjsciowej
+- proces wykonujacy operacji i/o wczytuje znaki z kolejki wejsciowej
+- proces przekazuje znaki do kolejki wyjsciowej
+- znaki z kolejki wyjsciowej odczytywane sa przez urzadzenie terminala
+
+
+Dodatkowo mamy specjalne symbole tj. ERASE I KILL
+ERASE usuwa ostatni znak z obecnie czytanej linii
+KILL usuwa całą obecnie czytaną linię
+
+
+
+Jak konfigurację terminala powinien zmienić program na czas wpisywania hasła przez użytkownika?
+
+Kiedy użytkownik ma wpisać hasło aplikacja musi wyłączyć flagę echo terminala.
+
+
+
+Czemu edytory takie jak vi(1) konfigurują sterownik terminala do pracy w trybie niekanonicznym?
+
+Tryb niekanoniczny wyłącza buforowanie wejścia terminala, co oznacza, że każdy wprowadzony znak jest natychmiast dostarczany do programu, zamiast oczekiwać na Enter.
+Tryb niekanoniczny pozwala na przechwytywanie specjalnych klawiszy bez oczekiwania na Enter.
+Edytory potrzebują pełnej kontroli nad sesją terminala, aby dostosować zachowanie terminala do potrzeb edycji tekstu. Tryb niekanoniczny daje edytorowi taką kontrolę.
+To edytor jest odpowidzialny za interpretowanie klawiszy.
+
+
+
+
+
+
+
+
+
+
+
+zad 3
+
+zarzadzanie zadanimi - &, jobs, kill, fg, bg, crtl + z
+
+edycja wiersza - tryb kanoniczny udostępnia edycję wiersza, interpretuje znaki specjalne i wypisuje na ekran znaki wpisane przez użytkownika
+
+rozmiar okienka - jego zmiana realizowana jest przez dostarczenie sygnalu do terminalowego emulatora
+SIGWINCH    -    Window resize signal
+
+
+
+Znaki terminala zamieniane na sygnaly zwiazane z zarzadzaniem zadaniami:
+
+intr = ^C - SIGINT
+
+quit = ^\ - SIGQUIT
+
+susp = ^Z - SIGSTP
+
+start = ^Q - wznowienie wyswietlania
+
+stop = ^S - zatrzymanie wyswietlania
+
+
+
+Znaki sluzace do edycji wiersza:
+
+erase = ^? - usuwa ostatni wprowadzony znak
+
+kill = ^U - usuwa biezaca linie
+
+werase = ^W - usuwa ostatnie wprowadzone slowo
+
+eol = wysyla znak konca wiersza
+
+
+
+Program może zostać poinformowany o zmianie rozmiaru okna terminala. W tym celu musi zainstalować procedurę obsługi sygnału – którego?
+
+SIGWINCH
+
+
+Jaką procedurą można wczytać nowy rozmiar okna?
+
+int ioctl(int fd, unsigned long request, ...);
+
+
+
+
+
+
+zad 5 
+
+1.
+--- stopped by SIGTSTP ---
+--- SIGCONT {si_signo=SIGCONT, si_code=SI_USER, si_pid=173003, si_uid=1000} ---
+
+2.
+Wciśnięcie CTRL+S powoduje, że proces lub urządzenie wysyłające dane dostają informację od innego procesu/udządzenia, żeby zwiesić transmisję danych. Chyba nei wiaze sie to z wysylaniem syganlow do procesu.
+Wciśnięcie CTRL+Q powoduje, wznowienie transmisji między procesami/urządzeniami. Tak samo brak sygnalow w strace.
+(a jak to sie dzieje ze output jest zatrzymany??)
+
+3.
+--- stopped by SIGTTIN ---
+ Kiedy zadanie drugoplanowe próbuje czytać z STDIN to dostaje sygnał SIGTTIN i zostaje wstrzymane.
+ Pozwala to uniknac sytuacji wyscigu kiedy pare zadan drugoplanowych chce czytac z STDIN i nie wiadomo ktore powinno otrzymac wpisane znaki.
+
+4.
+Po ustawieniu flagi tostop:
+--- stopped by SIGTTOU ---
+Domyslnie jest tak, ze zadanie drugplanowe moze pisac na standardowe wyjscie, jezeli tego nei chcemy mozemy wlaczyc falge tostop.
+SIGTTOU zatrzymuje procesy działające w tle próbujące wypisać coś na terminal.
+
+5.
+Wlaczenie falgi echoctl powoduje wypisywanie znakow kontrolnych na stadardowe wyjscie.
+
+
+
+
+
+zad 6
+
+Wyjaśnij co robią te procedury, a następnie przeprowadź uczestników zajęć przez ich kod.
+
+setjmp w chwili wywołania zapisuje kontekst dzialania programu (licznik rozkazow, niektore rejestry). Zapisany kontekst podany procedurze longjmp zostaje przywrocony, powodujac zmiane kontroli przplywu na miejsce, w ktorym setjmp zostal wczesniej wywolany.
+
+
+
+Definicja struktury jmpbuf służącej do zapisywania kontekstu:
+
+/* Setjmp & longjmp implementation without sigprocmask */
+typedef struct {
+  long rbx;
+  long rbp;
+  long r12;
+  long r13;
+  long r14;
+  long r15;
+  void *rsp;
+  void *rip;
+} Jmpbuf[1];
+
+int Setjmp(Jmpbuf env);
+noreturn void Longjmp(Jmpbuf env, int val);
+
+
+
+
+
+Offsety do kolejnych pól w strukturze jmpbuf.
+Procedura setjmp zapisuje kolejne rejestry do odpowiednich pól struktury.
+W momencie wejścia do funkcji wywołaniem call (co zrobiliśmy wchodząc do setjmp), na stos zostaje odłożony adres, do którego mamy wrócić. Stad bierze sie linijka 	movq    (%rsp),%r11
+
+setjmp nie zapisuje wszystkich rejestrów procesora, ponieważ nie musi - zapisuje tylko te callee-saved, ponieważ reszta - caller-saved będą zapisane w momencie wywołania procedury setjmp i przywrócone po wyjściu z niej. Za ich przywracanie rowniez odpwiedzilany jest kod wywolujacy.
+
+Przy wykonywaniu ret, program pobiera wartość z wierzchołka stosu i ustawia %rip. %rip nie mozna bezposrednio modyfikowac w kodzie.
+
+
+«libcsapp/Setjmp.s»
+
+
+_JB_RBX = 0
+_JB_RBP = 1
+_JB_R12 = 2
+_JB_R13 = 3
+_JB_R14 = 4
+_JB_R15 = 5
+_JB_RSP = 6
+_JB_RIP = 7
+
+        .text
+
+        .globl Setjmp
+        .type Setjmp,@function
+Setjmp:
+	movq    (%rsp),%r11
+	movq    %rbx,(_JB_RBX * 8)(%rdi)
+	movq    %rbp,(_JB_RBP * 8)(%rdi)
+	movq    %r12,(_JB_R12 * 8)(%rdi)
+	movq    %r13,(_JB_R13 * 8)(%rdi)
+	movq    %r14,(_JB_R14 * 8)(%rdi)
+	movq    %r15,(_JB_R15 * 8)(%rdi)
+	movq    %rsp,(_JB_RSP * 8)(%rdi)
+	movq    %r11,(_JB_RIP * 8)(%rdi)
+	xorl	%eax,%eax
+	ret
+        .size Setjmp, . - Setjmp
+        
+        .globl Longjmp
+        .type Longjmp,@function
+Longjmp:
+	movq    (_JB_RBX * 8)(%rdi),%rbx
+	movq    (_JB_RBP * 8)(%rdi),%rbp
+	movq    (_JB_R12 * 8)(%rdi),%r12
+	movq    (_JB_R13 * 8)(%rdi),%r13
+	movq    (_JB_R14 * 8)(%rdi),%r14
+	movq    (_JB_R15 * 8)(%rdi),%r15
+	movq    (_JB_RSP * 8)(%rdi),%rsp
+	movq    (_JB_RIP * 8)(%rdi),%r11
+	movl	%esi,%eax
+	testl	%eax,%eax
+	jnz	1f
+	incl	%eax
+1:	movq	%r11,(%rsp)
+	ret
+        .size Longjmp, . - Longjmp
+
+

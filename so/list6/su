@@ -1,0 +1,136 @@
+
+	
+ubase
+suckless linux base utils
+	git clone git://git.suckless.org/ubase
+	Log | Files | Refs | README | LICENSE
+
+su.c (2414B)
+
+      1 /* See LICENSE file for copyright and license details. */
+      2 #include <sys/types.h>
+      3 
+      4 #include <errno.h>
+      5 #include <grp.h>
+      6 #include <pwd.h>
+      7 #include <stdio.h>
+      8 #include <stdlib.h>
+      9 #include <string.h>
+     10 #include <unistd.h>
+     11 
+     12 #include "config.h"
+     13 #include "passwd.h"
+     14 #include "util.h"
+     15 
+     16 extern char **environ;
+     17 
+     18 static int lflag = 0;
+     19 static int pflag = 0;
+     20 
+     21 static int
+     22 dologin(struct passwd *pw)
+     23 {
+     24 	char *shell = pw->pw_shell[0] == '\0' ? "/bin/sh" : pw->pw_shell;
+     25 	char *term = getenv("TERM");
+     26 	clearenv();
+     27 	setenv("HOME", pw->pw_dir, 1);
+     28 	setenv("SHELL", shell, 1);
+     29 	setenv("USER", pw->pw_name, 1);
+     30 	setenv("LOGNAME", pw->pw_name, 1);
+     31 	setenv("TERM", term ? term : "linux", 1);
+     32 	if (strcmp(pw->pw_name, "root") == 0)
+     33 		setenv("PATH", ENV_SUPATH, 1);
+     34 	else
+     35 		setenv("PATH", ENV_PATH, 1);
+     36 	if (chdir(pw->pw_dir) < 0)
+     37 		eprintf("chdir %s:", pw->pw_dir);
+     38 	execlp(shell, shell, "-l", NULL);
+     39 	weprintf("execlp %s:", shell);
+     40 	return (errno == ENOENT) ? 127 : 126;
+     41 }
+     42 
+     43 static void
+     44 usage(void)
+     45 {
+     46 	eprintf("usage: %s [-lp] [username]\n", argv0);
+     47 }
+     48 
+     49 int
+     50 main(int argc, char *argv[])
+     51 {
+     52 	char *usr = "root", *pass; 	// nazwa uzytkownika i wprowadzone haslo
+     53 	char *shell;				// lancuch ze sciezka do powloki uruchamianej nowemu  uzytkownikowi
+     54 	struct passwd *pw;			// wskaznik na strukture passwd
+     55 	char *newargv[2];			// argumenty dla execve przy uruchamianiu powloki
+     56 	uid_t uid;					 
+     57 
+     58 	ARGBEGIN {
+     59 	case 'l':
+     60 		lflag = 1;
+     61 		break;
+     62 	case 'p':
+     63 		pflag = 1;
+     64 		break;
+     65 	default:
+     66 		usage();
+     67 	} ARGEND;
+     68 
+     69 	if (argc < 1)
+     70 		;
+     71 	else if (argc == 1)
+     72 		usr = argv[0];
+     73 	else
+     74 		usage();
+     75 
+     76 	errno = 0;
+     77 	pw = getpwnam(usr); 		// pointer to a structure taining the broken-out fields of the record in the password database that matches the username name. / NULL
+     78 	if (!pw) {
+     79 		if (errno)
+     80 			eprintf("getpwnam: %s:", usr);
+     81 		else
+     82 			eprintf("who are you?\n");
+     83 	}
+     84 
+     85 	uid = getuid();
+     86 	if (uid) {
+     87 		pass = getpass("Password: ");	// zmeinia stan terminala /dev/tty wylacza echo czyta jedna linie i przywraca poprzednie ustawienia 
+     88 		if (!pass)
+     89 			eprintf("getpass:");
+     90 		if (pw_check(pw, pass) <= 0) 	// powrownanie wrpowadzonego hasla
+     91 			exit(1);
+     92 	}
+     93 
+     94 	if (initgroups(usr, pw->pw_gid) < 0)	// initialize the supplementary group access list + gid  /etc/group
+     95 		eprintf("initgroups:");
+     96 	if (setgid(pw->pw_gid) < 0)			// zmiana tozsamoci
+     97 		eprintf("setgid:");
+     98 	if (setuid(pw->pw_uid) < 0)
+     99 		eprintf("setuid:");
+    100 
+    101 	if (lflag) {
+    102 		return dologin(pw);				// zmiana zmiennych srodowiskowych przejscie do katalogu domowych 
+    103 	} else {
+    104 		shell = pw->pw_shell[0] == '\0' ? "/bin/sh" : pw->pw_shell;
+    105 		newargv[0] = shell;
+    106 		newargv[1] = NULL;
+    107 		if (!pflag) { 					// decyzja o tym czy zmienne srodowiskowy zostawic bez zmian 
+    108 			setenv("HOME", pw->pw_dir, 1);
+    109 			setenv("SHELL", shell, 1);
+    110 			if (strcmp(pw->pw_name, "root") != 0) {
+    111 				setenv("USER", pw->pw_name, 1);
+    112 				setenv("LOGNAME", pw->pw_name, 1);
+    113 			}
+    114 		}
+    115 		if (strcmp(pw->pw_name, "root") == 0)
+    116 			setenv("PATH", ENV_SUPATH, 1);
+    117 		else
+    118 			setenv("PATH", ENV_PATH, 1);
+    119 		execve(pflag ? getenv("SHELL") : shell,
+    120 		       newargv, environ);
+    121 		weprintf("execve %s:", shell);
+    122 		return (errno == ENOENT) ? 127 : 126;
+    123 	}
+    124 	return 0;
+    125 }
+
+

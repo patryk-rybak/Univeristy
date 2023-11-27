@@ -1,0 +1,13 @@
+fn main() {
+    let n = 6;
+    let start = (n * n - ((n >> 2) << 2) + (if n % 2 == 0 {1} else {0});
+    let end = (n * n - ((n >> 2) << 2) + n * 2) + 1;
+    let ok = (n * n - ((n >> 2) << 2) + (if n % 2 == 0 {1} else {0}))..((n * n - ((n >> 2) << 2) + n * 2) + 1)).step_by(2);
+    
+    println!("start {}", start);
+    println!("end {}", end);
+    for e in ok {
+        
+        println!("{}", e);
+    }
+}
