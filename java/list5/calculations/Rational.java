@@ -1,4 +1,5 @@
 import java.lang.Intiger;
+package calculations;
 
 public class Rational implements Comparable<Rational> {
 		private int numerator, denominator = 1;

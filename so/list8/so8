@@ -1,0 +1,147 @@
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+przeczytac papera pierw !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!i!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+
+
+
+
+
+
+
+
+zad. 1
+
+sbrk(2) - zmeinia polozenie brk zmieniajac tym samym dostep do pamieci
+mmap(2) - mapuje fragment pamieci
+munmap(2) - zwalnia frakgment pamieci
+
+
+?? Jakie są wady stosowania sbrk do zarządzania rozmiarem sterty przez biblioteczny algorytm zarządzania pamięcią malloc(3)?
+
+sbrk(2) zwyczajnie zmienia położenie pointera brk, który oznacza koniec sterty,
+dlatego poslugujac sie sbrk nie jestesmy w stanie zwolnic pamieci ze srodka starty bez utraty wszsytkiego miedzy ta pamiecia i brk
+
+
+?? Jak można to poprawić przy pomocy mmap i munmap?
+
+pierwsza prezentacja ctr+f "Allocation Example"
+(moze jeszce wyjasnic z boundary tagami na krancach obszarow pamieci?)
+
+
+?? Kiedy procedura free może zwrócić pamięć do jądra?
+
+man 3 malloc:
+Normally, malloc() allocates memory from the heap, and adjusts the size of the heap as required, using sbrk(2). 
+When allocating blocks of memory larger than MMAP_THRESHOLD bytes,  the  glibc  malloc()
+implementation allocates the memory as a private anonymous mapping using mmap(2).  MMAP_THRESHOLD is 128 kB by default, but is adjustable using mallopt(3). 
+
+Kiedy rozmiar alokowanej pamięci przekracza wartość MMAP_THRESHOLD
+ wskaźnik brk (który jest używany do zarządzania stertą przy użyciu sbrk(2)) pozostaje niezmieniony,
+a zamiast tego alokowana jest nowa przestrzeń pamięci przy użyciu funkcji mmap(2).
+
+ze stacka:
+Pages acquired via anonymous mmap can be released via munmap, which is what glibc is doing. So for small allocations, 
+free returns memory to your process's heap (but retains them in the process's memory); for large allocations, free returns memory to the system as a whole.
+
+
+
+zad.2 
+
+framgmentacja wewnetrzna - For a given block, internal fragmentation occurs if payload is
+smaller than block size (pierwsza prezentacja slajd 12)
+
+fragmentacja zewnetrzna - Occurs when there is enough aggregate heap memory,
+but no single free block is large enough (pierwsza prezentacja slajd 13)
+
+kompaktowanie - to samo co w przypadku strkutry katalogu
+Przesuwanie zajętych bloków tak, żeby możliwie jak najwięcej wolnych bloków połączyło się w ciągłe obszary
+
+
+?? Wyjaśnij różnicę między fragmentacją wewnętrzną i zewnętrzną.
+
+w pojeciach
+
+
+?? Czemu algorytm malloc nie można stosować kompaktowania?
+
+Poniewaz w kodzie potencjalnie bardzo duzo zmiennych moze nawiazywac do przemieszczanych fragmentow pamieci,
+a to oznacza ze zeby wszystkie wskazniki pozostaly aktualne trzeba sie bardzo napracowac
+
+
+?? Na podstawie [6, §2.3] opowiedz o dwóch głównych przyczynach występowania fragmentacji zewnętrznej.
+
+Izolowane śmierci - kluczowym aspektem jest tworzenie bloków wolnej pamięci które sąsiadują z blokami zaalokowanymi.
+Zauważmy, że jeśli alokator zaalokuje w pamięci wiele bloków i wszystkie one umrą (prawie) w tym samym momencie,
+to nie dojedzie do fragmentacji – program będzie korzystał z ciągłego fragmentu pamięci, a kiedy przestanie jej potrzebować,
+zwolni ciągły fragment pamięci. Zatem alokator może próbować przewidywać które bloki zostaną zwolnione mniej więcej w tym samym czasie
+i umieszczając je obok siebie, może w ten sposób zmniejszyć fragmentację zewnętrzną.
+
+Zachowanie programu zmieniające się w czasie - w szczególności chodzi o zmiany w sposobie wykorzystania pamięci
+przez program, np zwalnianie małych bloków pamięci i alokowanie dużych
+
+
+
+zad. 3
+
+first-fit - 
+ Search list from beginning, choose first free block that fits
+
+next-fit - 
+ Like first fit, but search list starting where previous search finished
+
+best-fit -
+ Search the list, choose the best free block: fits, with fewest bytes left over
+
+
+?? Posługując się wykresem wykorzystania pamięci w trakcie życia procesu opowiedz o trzech wzorcach przydziału pamięci występujących w programach [6, §2.4].
+
+mamy trzy glowne wzorce przydzialu pamieci:
+
+	- peak - nagle uzycia duzej ilosci pamieci i jej zwolnienia
+
+	- ramp - stopniowe zwiekszanie wykorzystania pamieci 
+
+	- plateaus (plaskowyz?) - szybkie zgromadzenie duze ilosci pamieci i uzywane jej przez wiekszosc czasu zycia
+
+opisac paper
+
+
+?? Na podstawie paragrafu zatytułowanego „Exploiting ordering and size dependencies” wyjaśnij jaki jest związek między czasem życia bloku, a jego rozmiarem?
+
+Czesto jest tak, ze gdy alokowane sa bloki o tych samych rozmiarach w tym samym czasie to sa one tych samych typow i prawdopodobnie zostana zwolnione w tym samym czasie.
+Stad nie zaleca sie ustawiania blokow roznych rozmiarow w jednolitym obszarze, bo moze to sprzyjac fragmentacji.
+
+
+?? first-fit, next-fit i best-fit Na podstawie [6, §3.4] wymień ich słabe i mocne strony.
+
+first-fit:
+	zalety:
+		- liniowy  czas dzialania
+		- prosty w implementacji
+	wady:
+		- moze powodowac duza fragmentacje zewnetrzna
+
+mext-fit:
+	zalety:
+		- zwykle dziala szybciej od first-fit
+		- przez to ze zawsze zaczyna przeszukiwanie z innego miejsca to tworzac male nieuzywane bloki sprawia ze sa bardziej rozproszone niz w first-fit
+	wady:
+		- pogarsza lokalnosc
+		- moze zwiekszac fragmentacje przez to, sasiadujace bloki moga pochodzic z roznych faz programu i roznic sie dlugoscia zycia
+
+best-fit:
+	zalety:
+		- minimalizuje fragmentacje zewnetrzna
+	wady:
+		- dziala wolniej (przechodzi cala sterte w przypadku braku idealnego bloku)
+		- przez to srednio wypada na duzych stertach
+
+
+
+
+

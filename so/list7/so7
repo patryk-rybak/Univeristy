@@ -1,0 +1,353 @@
+zad. 1
+
+odwzorowanie plikow w pamieci (memmory-mapped files) - 
+File mapping: A file mapping maps a region of a file directly into the calling
+process’s virtual memory. Once a file is mapped, its contents can be accessed
+by operations on the bytes in the corresponding memory region. The pages of
+the mapping are (automatically) loaded from the file as required. This type of
+mapping is also known as a file-based mapping or memory-mapped file.
+
+odwzorowanie pamiec anonimowej (anonymous mapping) - 
+Anonymous mapping: An anonymous mapping doesn’t have a corresponding
+file. Instead, the pages of the mapping are initialized to 0.
+Another way of thinking of an anonymous mapping (and one is that is close to
+the truth) is that it is a mapping of a virtual file whose contents are always ini-
+tialized with zeros.
+
+odwzorowanie prywatne - 
+Private mapping (MAP_PRIVATE): Modifications to the contents of the mapping are
+not visible to other processes and, for a file mapping, are not carried through
+to the underlying file. Although the pages of a private mapping are initially
+shared in the circumstances described above, changes to the contents of the
+mapping are nevertheless private to each process. The kernel accomplishes
+this using the copy-on-write technique (Section 24.2.2). This means that when-
+ever a process attempts to modify the contents of a page, the kernel first creates
+a new, separate copy of that page for the process (and adjusts the process’s
+page tables). For this reason, a MAP_PRIVATE mapping is sometimes referred to as
+a private, copy-on-write mapping.
+
+odzworoanie dzielone -
+Shared mapping (MAP_SHARED): Modifications to the contents of the mapping are
+visible to other processes that share the same mapping and, for a file mapping,
+are carried through to the underlying file.
+
+
+
+?? Wyjasnij roznice miedzy momeory-mapped files a anonymous mapping
+
+Roznice wyjasniona powyzej w pojeciach
+
+
+?? Jaką zawartością wypełniana jest pamięć wirtualna należąca do tychże odwzorowań?
+
+Roznice wyjasniona powyzej w pojeciach
+
+
+?? Czym różni się odwzorowanie prywatne od dzielonego?
+
+Roznice wyjasnione powyzej w pojeciach
+
+
+?? Czy pamięć obiektów odwzorowanych prywatnie może być współdzielona?
+
+Roznice wyjasniona powyzej w pojeciach
+
+The memory in one process’s mapping may be shared with mappings in other pro-
+cesses (i.e., the page-table entries of each process point to the same pages of RAM).
+This can occur in two ways:
+ When two processes map the same region of a file, they share the same pages
+of physical memory.
+ A child process created by fork() inherits copies of its parent’s mappings, and
+these mappings refer to the same pages of physical memory as the correspond-
+ing mappings in the parent.
+
+
+?? Czemu można tworzyć odwzorowania plików urządzeń blokowych w pamięć, a znakowych nie?
+
+Urządzenia znakowe są abstrakcją nad prostą transmisją strumieniową, więc podpięcie ich pod pamięć nie ma żadnej oczywistej interpretacji
+
+
+
+
+
+
+
+zad. 2
+
+?? Na podstawie opisu do [ 3, tabeli 49 –1] podaj scenariusze użycia prywatnych i dzielonych odwzorowań plików w pamięć albo pamięci anonimowej.
+
+Powtorzyc to co w ksiazce
+
+
+
+?? Pokaż jak je utworzyć z użyciem wywołania mmap(2).
+
+(linux-programming-interface 49.6 Additional mmap() Flags) + opis argumentow 49.2 Creating a Mapping: mmap()
+
+
+- Prywatne odwzorowanie pliku
+
+Listing 49-1: Using mmap() to create a private file mapping
+
+
+- Dzielone odwzorowanie pliku
+
+Listing 49-2: Using mmap() to create a shared file mapping
+
+
+- Prywatne odwzorowanie anonimowe
+
+MAP_PRIVATE anonymous mappings
+
+
+- Dzielone odwzorowanie anonimowe
+
+MAP_SHARED anonymous mappings
+
+
+
+?? Co się dzieje z odwzorowaniami po wywołaniu fork(2)?
+
+Za pomocą CoR procesy dbaja o to by nie widziec swoich zmian i jednoczesnie nie powielac mapowania jezeli niekonieczne
+
+
+?? Czy wywołanie execve(2) tworzy odwzorowania prywatne czy dzielone
+
+Mappings are lost when a process performs an exec(), but are inherited by the
+child of a fork(). The mapping type (MAP_PRIVATE or MAP_SHARED) is also inherited.
+
+odp na pytanie:
+	Figure 9.31 --A Programmer's Persp. 2nd ed
+
+
+?? W jaki sposób jądro systemu automatycznie zwiększa rozmiar stosu do ustalonego limitu?
+
+MAP_GROWSDOWN
+              This flag is used for stacks.  It indicates to the  kernel  vir‐
+              tual  memory  system  that the mapping should extend downward in
+              memory.  The return address is one page lower  than  the  memory
+              area  that  is actually created in the process's virtual address
+              space.  Touching an address in the "guard" page below  the  map‐
+              ping  will cause the mapping to grow by a page.  This growth can
+              be repeated until the mapping grows to within a page of the high
+              end  of  the  next  lower  mapping,  at which point touching the
+              "guard" page will result in a SIGSEGV signal.
+
+
+?? Kiedy jądro wyśle sygnał SIGBUS do procesu posiadającego odwzorowanie pliku w pamięć [ 3, §49.4.3]?
+
+If the mapping includes pages beyond the rounded-up region (i.e., bytes 4096
+and beyond in Figure 49-4), then attempts to access addresses in these pages result
+in the generation of a SIGBUS signal, which warns the process that there is no region
+of the file corresponding to these addresses. As before, attempts to access
+addresses beyond the end of the mapping result in the generation of a SIGSEGV signa
+
+
+
+
+
+
+zad. 3
+
+$ cat /proc/$(pgrep Xorg)/status | egrep 'Vm|Rss'
+
+VmPeak:	 1400600 kB		
+VmSize:	 1068804 kB	
+VmLck:	       0 kB
+VmPin:	       0 kB			
+VmHWM:	  239144 kB
+VmRSS:	  176584 kB
+RssAnon:	   63248 kB
+RssFile:	   74368 kB
+RssShmem:	   38968 kB
+VmData:	  114884 kB
+VmStk:	     132 kB
+VmExe:	    1696 kB
+VmLib:	  138848 kB
+VmPTE:	     672 kB
+VmSwap:	       0 kB
+
+
+			  VmPeak Peak virtual memory size.
+				(najwiekszy osiagniety rozmiar pamieci wirtualnej)
+
+              VmSize Virtual memory size.
+				(akutalny rozmiar pamieci)
+
+              VmLck  Locked memory size (see mlock(2)).
+				(pamięć która musi być trzyamna w RAM)
+
+              VmPin  Pinned  memory  size  (since Linux 3.2).  These are pages
+                     that can't be moved because something needs  to  directly
+                     access physical memory.
+				(tak jak VmLck tylko, ze nie moze byc przenoszona)
+
+              VmHWM  Peak  resident  set size ("high water mark").  This value
+                     is inaccurate; see /proc/[pid]/statm above.
+				(najwiekszy osiagniety rozmiar w RAM)
+
+              VmRSS  Resident set size.  Note that the value here is  the  sum
+                     of RssAnon, RssFile, and RssShmem.  This value is inaccu‐
+                     rate; see /proc/[pid]/statm above.
+				(aktualny rozmiar w RAM)
+
+              RssAnon
+                     Size of resident anonymous memory.   (since  Linux  4.5).
+                     This value is inaccurate; see /proc/[pid]/statm above.
+				(rozmiar pamieci anonimowej w RAM)
+
+              RssFile
+                     Size of resident file mappings.  (since Linux 4.5).  This
+                     value is inaccurate; see /proc/[pid]/statm above.
+				(rozmiar plikow zmapowanych w RAM)
+
+              RssShmem
+                     Size of resident shared memory (includes System V  shared
+                     memory, mappings from tmpfs(5), and shared anonymous map‐
+                     pings).  (since Linux 4.5).
+				(rozmiar wspoldzielonej pamieci w RAM)
+
+              VmData, VmStk, VmExe
+                     Size of data, stack, and text segments.   This  value  is
+                     inaccurate; see /proc/[pid]/statm above.
+				(rozmiar segmentu data, stack, text)
+
+              VmLib  Shared library code size.
+				(rozmiar wspodzielonego kodu)
+
+              VmPTE  Page table entries size (since Linux 2.6.10).
+				(rozmiar tablicy stron)
+
+              VmPMD  Size of second-level page tables (added in Linux 4.0; re‐
+                     moved in Linux 4.15).
+				(rozmiar tablicy drugiego poziomu)
+
+              VmSwap Swapped-out virtual  memory  size  by  anonymous  private
+                     pages;  shmem  swap  usage  is  not included (since Linux
+                     2.6.34).  This value is inaccurate; see /proc/[pid]/statm
+                     above.
+				(rozmiar danych przeniesionych do swap)
+
+mlock(2) - 
+lock  part  or all of the calling
+       process's virtual address space into RAM, preventing that  memory  from
+       being paged to the swap area.
+
+
+
+
+zbiorem roboczym procesu - 
+To ile pamięci potrzebuje program do pracy.
+
+cały program razem z fragmentami aktualnie niezaładowanymi do pamięci, w pliku na dysku
+
+
+
+zbior rezydentalny procesu -
+fragment programu aktualnie załadowany do RAMu
+
+Jest to miara tego, ile pamięci proces zużywa w naszej fizycznej pamięci RAM, aby załadować wszystkie strony po jego wykonaniu.
+RSS nie jest dokładną miarą całkowitego zużycia pamięci przez procesy, ponieważ nie obejmuje pamięci zużywanej przez biblioteki.
+Z drugiej strony te same biblioteki współdzielone mogą być powielane i liczone w różnych procesach.
+
+
+algos 
+
+
+$ vmstat -s
+     15720212 K total memory
+      7679052 K used memory
+      1596200 K active memory
+      4772864 K inactive memory
+      4683184 K free memory
+       197964 K buffer memory
+      3160012 K swap cache
+      2097148 K total swap
+            0 K used swap
+      2097148 K free swap
+       932446 non-nice user cpu ticks
+           42 nice user cpu ticks
+       308868 system cpu ticks
+      7103690 idle cpu ticks
+         2468 IO-wait cpu ticks
+            0 IRQ cpu ticks
+        30917 softirq cpu ticks
+            0 stolen cpu ticks
+      2480201 pages paged in
+      4786709 pages paged out
+            0 pages swapped in
+            0 pages swapped out
+    112274499 interrupts
+    148575354 CPU context switches
+   1701113865 boot time
+        82918 forks
+
+
+ ?? Czemu ta druga wartość nie pokrywa się z rozmiarem używanej pamięci raportowanym przez polecenie «vmstat -s»?
+
+Do każdego procesu jest wliczana cała pamięć do której ma dostęp,
+z uwagi że spora ilość jest spółdzielona w naszym programie wielokrotnie liczymy tą samą pamięć
+
+
+
+
+
+
+
+zad. 4
+
+?? Na podstawie slajdów do wykładu opisz algorytm obsługi błędu stronicowania w systemie Linux
+
+rozumiem to tak ze mamy prcessor on generuje nam VA ktory po przez mmu sprawdany jest w TLB i page table i teraz tak:
+- jezeli jest hit z uprawnieniami i wszsytkim to gitara odwolujemy jsie poprzez PA do pamiecie czy to cache czy real wszsytko jedno
+- jezeli mamy miss to nastepuje przekierowanie sterowania do handlera tkroy obsluzy page fault-a - czyli tak serio to dane TLM I page talbe sa tylko do generowania wyjątku.
+wracając mamy handlera i on juz w polaczeniu z kernelem wchodzi do task_struct, po przez mm do  mm_struct, po przez mmap do vm_area_struct gdzie porownuje odpowiednie bity z addressu powodujacego page fault z tym czy miesci sie w segmencie, z uprawnieniami itd(?) i dopiero na tej podstawie decyduje czy wurzycic segmentation fault czy sprowadzic brakujaca strone segmentu i odczytac dane
+
+
+
+?? Jakie informacje musi dostarczyć procesor, żeby można było wykonać procedurę obsługi błędu stronicowania
+
+- VA
+- PC 
+- uprawnienia co do addressu (ale skad? i w czym?)
+
+?? Do czego służą struktury jądra «mm_struct::pgd» i «mm_struct::mmap» zdefiniowane w pliku include/linux/mm_types.h?
+
+z wykladu:
+	- pgd wskazuje na pierwszy poziom tablicy stron
+	- mmap wskazuje na poczatek struktury vm_area_struct (list opisujacej cala przestrzen procesu)
+
+
+?? Kiedy jądro wyśle procesowi sygnał SIGSEGV z kodem «SEGV_MAPERR» lub «SEGV_ACCERR»? 
+
+SEGV_MAPERR - jezli okaze sie ze adres nie jest mapowany na żaden objekt
+
+SEGV_ACCERR - gdy uprawnienia do mapowania okaza sie niewystarczajace
+
+
+?? W jakiej sytuacji wystąpi pomniejsza usterka strony (ang. minor page fault) lub poważna usterka strony (ang. major page fault)?
+
+First, the page may actually be in
+memory, but not in this process’ page table. For instance, the page may have been
+brought in from disk by another process. In that case, we do not need to access the
+disk again, but merely map the page appropriately in the page tables. This is a
+pretty soft miss that is known as a minor page fault. Second, a major page fault
+occurs if the page needs to be brought in from disk
+
+
+?? Jaką rolę pełni w systemie bufor stron (ang. page cache)?
+
+. The page cache holds pages con-
+taining file blocks that have recently been read or have been read in advance in
+expectation of being used in the near future, or pages of file blocks which need to
+be written to disk, such as those which have been created from user-mode proc-
+esses which have been swapped out to disk. It is dynamic in size and competes for
+the same pool of pages as the user processes. The paging cache is not really a sep-
+arate cache, but simply the set of user pages that are no longer needed and are wait-
+ing around to be paged out. If a page in the paging cache is reused before it is
+evicted from memory, it can be reclaimed quickly
+
+cache dla stron znajdujących się w nieużywanych częściach RAM. 
+Motywacja jest taka, że dyski są wolne i lepiej jest już podpiąc stronę, która jest już w ramie. 
+Daje nam to nie tylko szybszy handling page faultów, ale też zapis. Brudne storny są oznaczane bietm dirty.
+
