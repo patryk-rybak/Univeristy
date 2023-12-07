@@ -1,18 +1,4 @@
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-przeczytac papera pierw !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!i!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-
-
-
-
-
-
-
-
 
 zad. 1
 
@@ -154,8 +140,31 @@ OK
 
 zad. 5
 
+algorytm kubełkowy (segregated-fit) - 
+wykorzystaniu tablicy list wolnych bloków, gdzie każda lista przechowuje wolne bloki z ustalonej klasy rozmiaru.
+Klasy rozmiaru można zdefiniować dowolnie chyba.
 
 
+
+- nie ma potrzeby przechodzenia przez bloki ktore sa mniejsze od pamieci ktora chcemy zajac w przeciwienstwie do best-fita z pojedyncza lista
+
+- potrzebna jest dodatkowa struktura przechowujaca listy blokow o zadanych wielkosciach
+
+
+
+malloc:
+Dla ustalonego rozmiaru żądanej pamięci, algorytm próbuje znaleźć wolne miejsce na liście przechowującej bloki z tej samej klasy rozmiaru. Jeśli takiego miejsca nie ma, algorytm kontynuuje poszukiwania na liście przechowującej bloki z kolejnej klasy rozmiarów. Ewentualny znaleziony blok jest rozdzielany. Jeśli i to zawiedzie, przeszukiwane są kolejne klasy aż do skutku. Jeśli w liście ostatniej klasy rozmiarów nie ma wolnego miejsca, algorytm alokuje dodatkową pamięć z systemu operacyjnego.
+
+free:
+Dla wskazanego bloku, alokator gorliwie łączy go z ewentualnymi sąsiadującymi wolnymi blokami, a następnie wstawia go do listy wolnych bloków, obsługującej jego klasę rozmiaru.
+
+
+- przy gorliwym zlaczaniu koszt zwalniania blokow z okresu zycia calego programu jest rozdzialony pomiedzy poszczegolne operacje free - O(1)
+W przypadku lewniwego zlaczania koszt bedzie wynosic O(n) - w najgorszym wypadku laczymy wszsytkie bloki
+
+- leniwe zlaczanie wydaje sie trudniejsze w implementacji
+
+- nadmierna fragmentacja zewnetrzna
 
 
 
