@@ -1,0 +1,182 @@
+zad. 1
+
+?? Czym różni się przetwarzanie równoległe (ang. parallel) od przetwarzania współbieżnego (ang. concurrent)? 
+
+slajd nr 33
+
+przetwarzanie współbierzne - system wykonuje więcej niż jedo zadanie na raz, ale ni muszą one równolegle zajmować czasu procesora. System moze wykonac czesc pierwszego zadania, zatrzymac je i zajac sie drugim itd.
+
+przetwarzanie równoległe - występuje, gdy program dzieli zadania na mniejsze części (wątki) i wykonywane sa one jednocześnie tj. w tych samych cyklach zegraowych procesora)
+
+
+?? Czym charakteryzują się procedury wielobieżne (ang. reentrant)?
+
+To taka, której wykonanie może zostac przerwane przez sygnał i podczas tego przerwania może zostać jesczze raz bezpiecznei wywołana przed zakończeniem wcześniejszego.
+
+- Taka procedura nie może korzystać z innych procedur niewielobieznych
+- Nie korzysta z operacji na zmiennych statycznych
+- Nie modyfikuje wlasnego kodu(?)
+
+
+?? Podaj przykład procedury w języku C (a) wielobieżnej, ale nie wielowątkowo-bezpiecznej (ang. MT-safe) (b) na odwrót
+
+procedura wielowątkowo-bezpieczna (MT-safe) - gwarantuje poprawne zakońćzenie niezależnei od tego ile œątków wykona ją w tym samym czasie
+
+a) wielobieżne i nie MT-safe:
+procedura swap
+
+int temp;
+void swap(int* x, int* y) {
+	int s;
+	s = temp;
+	temp = *x;
+	*x = *y;
+	*y = temp;
+	temp = s;
+}
+
+b) niewielobieżne i MT-safe:
+printf - blokada na bufor
+malloc i free - są MT-safe czyli mozna alokowac pamiec w wielu watkach jednoczesnie, nie sa natomiast wielobieżne tzn. że zakłądają blokady a na końcu działania ją zwalniają (blokada na caly userspace?)
+
+
+?? Kiedy w jednowątkowym procesie uniksowym może wystąpić współbieżność?
+
+Np. kiedy proces otrzyma sygnał i zostanie wywołany signal handler.
+
+
+
+
+zad. 2
+
+?? Wybierz odpowiedni scenariusz zachowania wątków, w którym konkurują o dostęp do zasobów,
+i na tej podstawie precyzyjnie opisz zjawisko zakleszczenia (ang. deadlock), uwięzienia (ang. livelock)
+oraz głodzenia (ang. starvation).
+
+zakleszczenie (deadlock) -
+to sytuacja, w której wątek A czeka na zakończenie operacji wątka B, a wątek B czeka na zakończenie wątka A. 
+Program nigdy nie zakończy działania, gdyż wątki czekają na siebie nawzajem.
+
+uwięzienie (livelock) - 
+to sytuacja, w której dwa wątki zatrzymują swoje działanie aby uniknąć deadlocka, aby umożliwić innym wątkom wykonanie się,
+jednak robią to jednocześnie, przez co nie jest możliwe wykonanie się żadnego z nich. W przeciwieństwie do deadlocka, stan wątku może ulec zmianie.
+
+głodzenie (starvation) - 
+to sytuacja, w której wątek nie otrzymuje dostępu do zasobu, na który oczekuje, przez co nie może rozpocząć swojego działania.
+
+
+PRZYKŁADY
+
+
+deadlock:
+- Thread 1 is transfering the money from student accout to university bank account. There is no lock on the studnet account so a lock is granted to Thread 1
+- Thread 2 is transfering the money from University account to student bank account. There is no lock on the Univeristy account so lock is granted to Thread 2
+- Thread 1 is now trying to get a lock on univeristy account as it already has lock on studenty account in order to transfer the money from student to univeristy
+- Thread 2 has analogical situation but opposite
+- Thread 1 is waiting for Thread 2 to release the lock
+- Thread 2 is waiting for Thread 1 to release the lock
+- Threads are in deadlock
+
+livelock:
+- Tansaction 1 withdraw $3000 from Student A account 
+- Transaction 2 withdraw $1000 from University account
+- Transaction 1 failed to deposit money into University account because Transacion 2 has a lock on Uni account. student account is refunded
+- Transaction 2 failed to deposit money into Student A  account because Transacion 1 has a lock on Student A  account. Uni account is refunded
+- Tansaction 1 again withdraw $3000 from Student A account 
+- Transaction 2 again withdraw $1000 from University account
+and so on...
+
+starvation:
+przykłąd z kolejką w sklepie, gdzie jesteśmy mili i przepuszczamy ludzi w kolejce a ludzi przybywa szybciej niż ubywa
+
+
+
+zad. 3
+
+?? W poniższym programie występuje sytuacja wyścigu (ang. race condition) dotycząca dostępów
+do współdzielonej zmiennej «tally». Wyznacz jej najmniejszą i największą możliwą wartość.
+
+sytuacja wyścigu (race condition) - 
+outcome depends on arbitrary scheduling decisions elsewhere in the system
+
+godbolt pokazuje ze operacja inkrementacji nie jest wykonywana atomowo
+
+- Proc1 odczytuje wartosc tally = 0
+- Proc2 n-1 razy odczytuje tally, inkrementuje i zapisuje
+(tally = n - 1)
+- Proc1 inkrementuje odczytana wczesniej wartosc i zapisuje
+(tally = 1)
+- Proc2 wykonując n-tą interację wczytuje tally
+- Proc1 wykonuje pozostałe n-1 iteracji ziemniając tally
+(tally = n)
+- Proc2 inkrementuje wczesniej odczynata wartosc i zapisuje tally
+(tally = 2)
+
+w tym przeplocie ostateczna wartosc tally to 2. Gdyby wątki wykonały się szeregow to tally = 2n
+
+
+Jeśli wystartujemy K procesów może nastąpić podobny przeplot tzn. najmniejsza wartosc jaka ostatecznei osiagnie tally to 2 i najwieksza to po szeregowym przeplocie czyli Kn
+
+
+
+zad. 5
+
+Implementacja wątków POSIX skomplikowała semantykę niektórych zachowań procesów, które
+omawialiśmy do tej pory. Co nieoczekiwanego może się wydarzyć w wielowątkowym procesie uniksowym gdy:
+
+
+?? jeden z wątków zawoła funkcję fork(2) lub execve(2) lub exit_group(2)?
+
+fork :
+
+he child process is created  with  a  single  thread—the  one  that
+          called  fork().   The  entire virtual address space of the parent is
+          replicated in the child, including the states of mutexes,  condition
+          variables,  and other pthreads objects;
+
+wydaje mi sie ze jezeli wątki zakładałyby jakieś blokady w przed ich zdjęciem bastapiłby fork i blokujące wątki zostałyby usunięte to pewne zasoby staną się nieosągalne
+
+After a fork() in a multithreaded program, the child can safely call
+          only  async-signal-safe  functions (see signal-safety(7)) until such
+          time as it calls execve(2).
+
+execve :
+
+All threads other than the calling thread are destroyed during an execve().  Mutexes, condition variables, and other pthreads objects are not preserved.
+
+exit_group :
+
+This system call is equivalent to _exit(2) except that it terminates not only the calling thread, but all threads in the calling process's thread group.
+
+Since glibc 2.3, this is the system call invoked when the _exit(2) wrapper function is called.
+
+
+?? proces zadeklarował procedurę obsługi sygnału «SIGINT», sterownik terminala wysyła do procesu
+«SIGINT» – w kontekście którego wątek zostanie obsłużony sygnał?
+
+The signal disposition is a per-process attribute: in a multithreaded application, the disposition of a particular signal is the same for all threads.
+
+Each thread in a process has an independent signal mask, which indicates the set of signals that the thread is currently blocking.  A thread can manipulate its signal mask using pthread_sigmask(3).  In
+       a traditional single-threaded application, sigprocmask(2) can be used to manipulate the signal mask.
+
+A thread-directed signal is one that is targeted at a specific thread.  A
+       signal may be thread-directed because it was generated as a consequence of executing a specific machine-language instruction that triggered a hardware exception (e.g., SIGSEGV for an invalid memory ac‐
+       cess, or SIGFPE for a math error), or because it was targeted at a specific thread using interfaces such as tgkill(2) or pthread_kill(3).
+
+odpowiedz:
+A  process-directed signal may be delivered to any one of the threads that does not currently have the signal blocked.  If more than one of the threads has the signal unblocked, then the kernel chooses
+       an arbitrary thread to which to deliver the signal.
+
+
+?? określono domyślną dyspozycję sygnału «SIGPIPE», a jeden z wątków spróbuje zapisać do rury pipe(2),
+której drugi koniec został zamknięty?
+
+Sygnał zostanie odbrany i wszystkie wątki zostaną zakończone.
+
+
+?? czytamy w wielu wątkach ze pliku zwykłego korzystając z tego samego deskryptora pliku?
+
+Korzystając z jednego deskryptora plików w wielu wątkach (czytanie), wątki będą dzielić ten deskryptor, a więc również wszystkie skutki operacji wykonywanych na nim, tzn. kursor pliku będzie się przemieszczał dla wszystkich wątków. To oraz fakt, że nie możemy przewidzieć tego jak przeplatać będzie się działanie poszczególnych wątków sprawi, że każdy z nich będzie czytać "losowe" fragmenty pliku.
+
+
+

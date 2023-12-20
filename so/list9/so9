@@ -1,0 +1,201 @@
+zad. 1
+
+
+
+
+
+zad. 2
+
+protokół datagramowy (udp(7)) - simple transorl-layer protocol
+
+application writes a message to a UDP socket, which is then encapsulated in a UDP
+datagram, which is then further encapsulated as an IP datagram, which is then sent
+to its destination
+
+BRAK JAKIEJKOLWIEK PEWNOSCI CO SIE STANIE Z DATAGRAMEM PO WYSLANIU
+
+Each UDP datagram has a length.
+
+We also say that UDP provides a connectionless servicae, as there need not be any
+long-term relationship between a UDP client and serve
+
+If a UDP datagram is duplicated in the network, two copies can be delivered to the
+receiving host
+
+Also, if a UDP client sends two datagrams to the same destination,
+they can be reordered by the network and arrive out of ordero
+
+UDP provides no flow controlo
+
+UDP can be full-duplex.
+
+
+protokół połączeniowy (tcp(7)) - 
+TCP is a byte-stream protocol, without any record boundaries at all, which differs from UDP.
+
+TCP also provides reliability. When TCP sends data to the other end, it requires an
+acknowledgment in return. If an acknowledgment is not received, TCP automatically
+retransmits the data and waits a longer amount of time. After some number of
+retransmissions, TCP will give up, with the total amount of time spent trying to send
+data typically between 4 and 10 minutes
+
+it provides reliable
+delivery of data or reliable notification of failure.
+
+TCP contains algorithms to estimate the round-trip time (RTT) between a client and
+server dynamically so that it knows how long to wait for an acknowledgment.
+
+assume an application writes 2,048 bytes to a TCP socket,
+causing TCP to send two segments, the first containing the data with sequence
+numbers 1–1,024 and the second containing the data with sequence numbers
+1,025–2,048. (A segment is the unit of data that TCP passes to IP.) If the segments
+arrive out of order, the receiving TCP will reorder the two segments based on their
+sequence numbers before passing the data to the receiving application
+
+it can detect that the data has been duplicated (from the sequence numbers), and discard
+the duplicate data
+
+TCP provides flow control. TCP always tells its peer exactly how many bytes of data it
+is willing to accept from the peer at any one timeo
+
+Finally, a TCP connection is full-duplex. This means that an application can send and
+receive data in both directions on a given connection at any time.
+
+
+
+
+
+
+
+
+?? Na podstawie [7, 2.3 i 2.4] omów różnice między protokołami warstwy transportowej: datagra-
+mowym udp(7) i połączeniowym tcp(7).
+
+UDO (user datagrem protocol)
+
+protokół bezpołączeniowy, serwer i klient nie tworzą połączenia przed rozpoczęciem
+transmisji danych
+
+przy użyciu jednego gniazda, możemy komunikować się z wieloma hostami
+
+używamy pary funkcji sendto() i recvfrom(), w których określamy adres hosta do
+którego wysyłamy lub od którego odbieramy dane
+
+brak gwaracji co do kompletności przesłanych danych
+
+
+TCP (transmission control protocol)
+
+protokół połączeniowy, serwer i klient tworzą pomiedzy sobą połączenie,
+gniazdo ma przypisaną informację o parze hostów, które będą się komunikować
+
+odczyty zapisy, wykonywane przy użyciu read, write
+
+odbiór każdego segmentu jest potwierdzany, jeśli brak potwierdzenia - wyślij jeszcze raz
+
+
+
+?? Czym różni się komunikacja półdupleksowa od dupleksowej?
+
+komunikajca półdupleksowa - Chociaż urządzenie może odbierać i wysyłać dane, nie może tego robić jednocześnie.
+
+komunikacja dupleksowa - W tym przypadku urządzenie może jednocześnie odbierać i wysyłać dane.
+
+
+?? Jak TCP radzi sobie z zagubieniem segmentu lub faktem, że segmenty mogą przyjść do odbiorcy w innej
+kolejności niż zostały wysłane?
+
+TCP also sequences the data by associating a sequence number with every byte that
+it sends. For example, assume an application writes 2,048 bytes to a TCP socket,
+causing TCP to send two segments, the first containing the data with sequence
+numbers 1–1,024 and the second containing the data with sequence numbers
+1,025–2,048. (A segment is the unit of data that TCP passes to IP.) If the segments
+arrive out of order, the receiving TCP will reorder the two segments based on their
+sequence numbers before passing the data to the receiving application.
+
+TCP przesylanym danym przypisuje odpowiednie metadane odpawiadajce przedzialowi bajtow, ktore zawieraja sie w przylanym fragmencie.
+Na podstawie takiego opisu mozna stwirdza czy wszsytkie jednostki zostaly odbrane i czy zostaly odebrane w dobrej kolejnosci, jezeli nie, to z pomoca oznaczen mozna je odpowiednio zamienic
+W ten sam sposob wykrywane sa duplikaty.
+
+
+
+?? Skąd protokół TCP wie kiedy połączenie zostało zerwane?
+
+" Jezeli klient zakończy strumień wejściowy to wywołamy close, które skoordynuje zamknięcie połączenia sieciowego, czyli wyśle jakiś specjalny pakiet(dla nas niewidoczny - chyba że odpalimy jakieś specjalne oprogramowanie).
+Ta informacja ląduje w jądrze po stronie serwera. Jądro informuje proces który przetwarzał dane na deskryptorze, że nastąpiła terminacja strumienia wejściowego i w wyniku tego otrzymamy z reada EOF i zostanie zamknięte połączenie. Możemy teraz przejśc do następnego połączenia"
+
+
+?? Jaki problem
+rozwiązuje sterowanie przepływem (ang. flow control) implementowane przez TCP?
+
+protokół TCP dynamicznie informuje jaką liczbę bajtów może jeszcze przyjąć, zapobiega to przepełnieniu bufora. Kontrola nad liczbą równocześnie nadawanych (oczekujących na potwierdzenie) segmentów pozwala na zredukowanie obciążenia sieci (nie nadajemy niepotrzebnie) i zwiększenie przepustowości.
+
+Dzięki temu mechanizmowi unikamy sytuacji gdy odbiorca dostaje więcej pakietów niż jest w stanie odczytać przez co gubione są pakiety
+
+
+
+
+
+
+zad. 3
+
+klient-serwera -  serwer nasłuchuje i akceptuje nowe połączenia, a klient się łączy
+
+?? Omów diagram [7, 4.1] komunikacji klient-serwer używającej protokołu tcp(7) przy pomocy
+interfejsu gniazd strumieniowych.
+
+na poczatku tworzymy socket, do jego stworzenia potrzeba trzech argumentów 
+(rodzina protokołu, typ połączenia czy stram, czy datagram oraz sam protokuł (zazywczaj poprzednie argumenty wyznaczaja go jednozacznie))
+
+potem wywolujemy funkcje connect ktora powoduje przypisanie portu przez jadro do socketa a podajac w argumentach address przypisujemy mu tez adres przeznaczenia
+
+natomiast w przypadku serwera my z góry nie nzmy z kim bedziemy sie laczyc wiec na pocztku robimy ogloszenie hej siwat tutaj jest port na takim adrasie i znim mozecie sie laczyc zeby kpzystac z moich uslug
+no wiec w socket mowimy na jakim protokole bedziemy nasluchiwac
+a za pomoca bing oglaszamy swaitu ze jest port na takim adresie i ze prosze sie z nim laczyc 
+a pozniej listenem deklarujemy ze wczesniejs stworzone gniazdo z bindowane jest gniazdem nasluchujacym i prosze odbieraj przez nie polaczenia 
+z tym gniazdem bedzie skojarzona kolejnka przychodzacyc polaczen i z tej kolejki za pomoca accept mozna zdejmowac kolejne polaczenia i jadra bedzie tworzec deskryptory plikow dla tych polaczen
+
+
+socket dostaje protokój (ipv4) i potem okreslamy semantyke polaczenia (stream czy datagram)
+
+teraz przychodzi bind i co robi? dostaje deksryptor pliku i mowimy ze chcemy z nim skojarzyc lokalny address ip  i w ten sposob oglosic swiatu ze jestesmy
+no i dlaczego ten address nie jest wybrany od razu przez jądro? pewnie chodzi o wybór konkretnego portu
+
+teraz przychodzi listen - jezeli nie wykonamy listem to jadro zaklada ze gniazdo jest aktywne i sluzy do nawiazywania polaczenia 
+natomiast jezeli wywolamy to dane gniazdo stanie sie pasywne i bedzie sluzyc do odbierania polaczen ( to jest to co istotnie rozroznia serwer od klienta) a backlog mowi o maksymalnej dlugosci kolejki nieodebranuych polaczen
+
+utowrzylismy deskryptor nasluchujacy i bedziemy go wykorzystywac zeby obebrac polaczenie za pomoca accept (accpet przymuje listenfd, zapisuje przez podany pointer addres jaki ma ta drgua strona z ktora sie komunikujemy) a zwraca tak juz normalnie deskryptor pliku nowego polaczonego socketa z druga strona 
+
+connect ojes tprosty, podajemy gniazdo sieciowe ktore utworzylismy wczensiej i mwimy z jakim serwerem chcemy sie polaczyc 
+
+
+
+?? W którym momencie następuje związanie gniazda z adresem lokalnym
+i zdalnym?
+
+w przypakdu klienta dzieje sie to podczas wywolania funckji connect - jadro przyposuje wtedy pierwszy fragment pary w gniezdzie adres loaklny + wybrany przez jadro port w a argumetnach dostarcamy drugi fragment pary)
+
+w przypakdu serwera dziej sie to podczas funckji bind wizacej socket z adresem lokalnym i oglaszajacej swiatu istnienie notamoast z adresemzdalnym polaczenie nastepuje dopiero w funkcji accept podczas akceptowanai polaczen z kolejki
+
+
+?? Która ze stron komunikacji używa portów ulotnych (ang. ephemeral)?
+
+Strona klienta używa tak określonych portów (są one przyznawane przez jądro)
+
+
+?? Co specyfikuje drugi
+argument wywołania systemowego listen(2)?
+
+okresla maksymalna dlugosc jaka moze osiagnac kolejka oczekujacych polaczen, ktora zwiazana jest z gniazdem nasluchujacym
+
+
+?? Z jakim numerem portu jest związane gniazdo przekazywane
+do i zwracane z accept(2)?
+
+przekazywany deskryptor gniazda jest zwiazany tym samym portem, ktory zostal okreslony w bind ( to te samo gniazdo)
+natomiast zwracane gniazdo jest zwiazne ze swoim lokalnym adresem i portem okreslonym wczensien w bind oraz adersem zdalnym, ktory zdjal z kolejki gniazda nasluchujacego
+
+
+?? Skąd serwer wie, że klient zakończył połączenie?
+
+kiedy klient przesle dane ze znakiem EOF
