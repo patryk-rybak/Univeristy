@@ -1,4 +1,4 @@
-fn j_n(n: i32) -> (Vec<i32>, Vec<i32>) {
+n j_n(n: i32) -> (Vec<i32>, Vec<i32>) {
     let mut j = vec![0];
     let mut a = vec![1];
     for i in 1..n {

@@ -1,0 +1,48 @@
+zad. 1
+
+Mutex to specjalna struktura służąca do synchronizacji wątków. Działaniem przypomina semafor binarny, jednak oprócz tego pamięta jeszcze wątek, który go zajął, dzięki czemu możliwe jest działanie dziedziczenia priorytetów oraz możliwe jest kontrolowanie tego, czy wątkiem zwalniającym blokadę jest ten, który ją zajął.
+
+
+Odwrócenie priorytetów polega na tym, że wątek o wysokim priorytecie zostaje zmuszony do uśpienia pomimo swojego pierwszeństwa tylko dlatego, że wątek o niższym priorytecie zajął mutex i został wywłaszczony zanim zdążył go zwolnić
+
+
+Dziedziczenie priorytetów to metoda rozwiązywania powyższego problemu. Polega na tym, że wątek o wysokim priorytecie udziela swojego priorytetu wątkowi o priorytecie niższym (korzystając z tego, że mutex przechowuje informację o tym, który wątek go zajmuje). Taki pożyczony priorytet jest “oddawany” po zwolnieniu mutexa, co umożliwia wątkowi o wysokim priorytecie kontynuowanie wykonywania własnego kodu.
+
+
+
+?? Przypomnij z wykładu na czym polega problem odwrócenia priorytetów oraz metodę jego
+rozwiązywania o nazwie dziedziczenie priorytetów?
+
+ze slajdow
+
+
+?? W jakim celu mutex pamięta właściciela, tj. wątek który
+trzyma blokadę?o
+
+zeby rozwaizac problem odwrocenia priorytetow
+
+
+?? W jaki sposób należy rozszerzyć implementację operacji «mutex_lock» i «mutex_unlock»,
+żeby nie dopuścić do odwrócenia priorytetów?
+
+tak jak omowione na slajdach, kiedy thread z wyzszym priorytetem widzi ze mutex zajal thread o nizszym to powinna zostac wywolana metoda "pthread_setschedprio" i zmeinic priorytet watku trzymajcego zasob do czasu ich zwolnienia tzn. ,ze w mutex_unlock rowniz powinna byc metoda "pthread_setschedprio" ale tym razem przywracajca zwalniajacemu jego pierwotny, nizszy priorytet
+
+
+?? Czy semafory są odporne na problem odwrócenia priorytetów?
+
+Nie, ponieważ semafor nie wie, które wątki go zajmują i tym samym czekający wątek o wysokim priorytecie nie jest w stanie wpłynąć na blokujące go wątki o niższym priorytecie - jest zmuszony czekać.
+
+
+
+zad. 5
+
+https://allendowney.com/semaphores/downey03semaphores.pdf
+
+s. 97
+
+
+zad. 6
+
+https://allendowney.com/semaphores/downey03semaphores.pdf
+
+s. 147

@@ -1,0 +1,254 @@
+zad. 1
+
+zmienna wspodzielona - A variable x is shared if and only if multiple threads
+reference some instance of x
+
+wyscig - sytuacja, w ktorej wynik dzialania programu zalezy od przeplotu dzialania watkow
+(wyscig moze miec miejsce, jezeli watki podyfikuja te sama zmienna wspodzielona)
+
+
+
+
+__thread long myid;		// kazdy watek otrzymuje kopie zeminnej
+static char **strtab;	// widoczna tylko dla pliku, w ktorym zostala zdefiniowana
+
+void *thread(void *vargp) {
+  myid = *(long *)vargp;	// wskaznik void zamieniamy na wskaznik long i dereferencje przypisujemy do myid
+  static int cnt = 0;
+  printf("[%ld]: %s (cnt=%d)\n", myid, strtab[myid], ++cnt);
+  return NULL;
+}
+
+int main(int argc, char *argv[]) {
+  ...
+  strtab = argv;
+  while (argc > 0) {
+  	myid = --argc;
+  	pthread_create(&tid, NULL, thread, (void *)&myid);
+  }
+ ...
+}
+
+?? Zapoznaj się z poniższym programem. Rozważamy wartości przechowywane w zmiennych:
+«myid», «strtab», «vargp», «cnt», «argc» i «argv[0]». Określ czy są one współdzielone i które z nich
+będą źródłem wyścigów (ang. data race).
+
+
+
+WSPOLDZIELONA(MAIN INSTANCE) ; WYSCIG
+myid - dzieki slowku kluczeowemu __thread, kazdy z watkow dostanie swoja instance zmiennej myid, jednak instancja myid znajdujaca sie w watku main dalej jest wspoldzielona.
+Watki otrzymuja address do jej wartosci, aby na jej podstawie ustawic wartosc w swojej instancij myid. W takim razie instajca myid watku main jest zrodelm wyscigu. Wartosci jakie utworzone watki odczytaja pod przekazanym addressem zalezy od przeplotu dzialania.
+
+WSPOLDZIELONA
+strtab - jest wspodzielona, watki wykonuja jedynie operacje odczytu bez modyfikacji wiec brak sytuacji wyscigu
+
+vargp - nie sa wspoldzielone poniewaz przekazanie arguemntu do funkcji odbywa sie poprzez rejestr albo stos, wiec wartosc wskaznika jest kopiowana dla kazdego watku i nie powoduje wysciu
+
+WSPOLDZIELONA ; WYSCIG
+cnt - jest statyczna lokalna zmienna. Oznacza to, ze odnosi sie ona do wartosci trzymanej w pamieci. Zakladajac, ze operacja inkrementacji nie jest atomowa, zmienna jest zrodlem wyscigu
+
+argc - nie jest wspoldzielona oraz jej wartosc nie zlezy od przeplotu dzialania watkow
+
+argv[0] - powiedzialbym, ze nie jest wspoldzielona, bo przed utworzeniem watkow wskaznik, ktora ona przetrzymuje kopiowany jest do strtab wiec teraz ten wskaznik istenije w dwoch miejscach ale ten w argv nie jest dotykany a jedynie wartosc ktora sie pod nim kryje. Za to zminna strtab jest wspoldzielona.
+
+
+
+
+
+
+
+
+zad. 2
+
+?? Podaj definicję sekcji krytycznej [2, 6.2].
+
+Fragment kodu, ktory moze byc wykonywany przez jeden watek jednoczesnie.
+
+ Each process has a segment of code, called a critical section,
+in which the process may be accessing — and updating — data that is shared
+with at least one other process. The important feature of the system is that,
+when one process is executing in its critical section, no other process is allowed
+to execute in its critical section
+
+
+?? Następnie wymień i uzasadnij założenia jakie musi
+spełniać rozwiązanie problemu sekcji krytycznej.
+
+wzajemne wykluczenie
+1. Mutual exclusion. If process P i is executing in its critical section, then no
+other processes can be executing in their critical sections.
+
+czyli maksymalnie jeden watek w sekcji krytycznej
+
+postep
+2. Progress. If no process is executing in its critical section and some pro-
+cesses wish to enter their critical sections, then only those processes that
+are not executing in their remainder sections can participate in decid-
+ing which will enter its critical section next, and this selection cannot be
+postponed indefinitely.
+
+czyli jedynei watki oczekujace na dostep sa brane pod uwage przy dopuszczeniu i ten wybor nie moze byc oddroczony na nieokreslony czas
+
+ograniczone czekanie
+3. Bounded waiting. There exists a bound, or limit, on the number of times
+that other processes are allowed to enter their critical sections after a
+process has made a request to enter its critical section and before that
+request is granted.
+
+czyli istnieje limit procesow dostajacych sie do sekcji krytycznej po danym procesie proszacym o dostep
+
+
+?? Czemu w programach przestrzeni użytkownika do jej
+implementacji nie możemy używać wyłączania przerwań (ang. interrupt disable)?
+
+wylaczenie przerwac (interrupt disable) - wylaczenie przerwan spowoduje, ze nie bedzie moglo dojsc do przelaczenia kontekstu. Oznacza to, ze od tego momentu do ich ponownego wlaczenia operujemy w obrebie tylko jednego watku. Problem pojawia sie, gdy dzialajacy proces nie przywroci obslugi procesow co moze skutkowac tym, ze tylko jeden proces bedzie dzialal w systemie. Dlatego nie jest dobrym pomyslem dawanie takiej mozliwosc programowi w przestrzeni uzytkownika, by nie dopuscic do sytuacji unieruchomienia calego systemu przez jeden proces. W przypadku wielu rdzeni rozwiazanie i tak nie bedzie dzialac, bo watki beda dzialac na wspodzielonych danych z poziomy innyh rdzeni.
+
+
+?? Odwołując się do Prawa
+Amdahla powiedz czemu programistom powinno zależeć na tym, by sekcje krytyczne były możliwie jak
+najkrótsze – określa się to również mianem blokowania drobnoziarnistego (ang. fine-grained locking).
+
+Prawo Amdahla, znane również jako Wywód Amdahla jest używane do znajdowania maksymalnego spodziewanego zwiększenia wydajności całkowitej systemu jeżeli tylko część systemu została ulepszona. Jest ono często używane w przypadku prowadzenia obliczeń równoległych do przewidzenia teoretycznego maksymalnego wzrostu szybkości obliczeń przy użyciu wielu procesorów. 
+
+Z prawa Admahala wiemy, ze im mniejsza czesc programu znajduje sie w sekcji krytycznej, tym wiecej pracy mzemy wykonac w tym samym czasie dla wielu procesorow.
+
+W przypadku zrównoleglania, Prawo Amdahla mówi, że jeżeli P jest proporcją programu, który może podlegać zrównolegleniu (np. korzyści z wykonywania równoległego) i ( 1 − P ) jest proporcją części, która nie może zostać zrównoleglona (pozostaje w przetwarzaniu szeregowym), wówczas maksymalne przyspieszenie jakie może być uzyskane przy użyciu N procesorów jest równe:
+
+    1 / [(1 - P) + P/N]
+
+no i chyba przyspieszenie jest wzgledem N = 1
+
+
+
+blokowanie drobnoziarniste (fine-grained locking) - praktyka polegajaca na blokowaniu mozliwie najmniejszych fragmentow programu, czyli np. zamaist calej struktury drzewa to tylko liscie albo galezie, co zwieksza poziom zrownoleglenia programu
+
+
+
+
+
+
+
+
+
+
+zad. 6
+
+watek 1 - while (true)
+watek 1 - blocked[id] = true;
+watek 1 - while (turn != id) --------- TRUE
+watek 1 - while (blocked[1 - id]) ---------- FALSE
+
+watek 0 - while (true)
+watek 0 - blocked[id] = true;
+watek 0 - while (turn != id) --------- FALSE
+watek 0 - /* put code to execute in critical section here */
+watek 0 - blocked[id] = false;
+
+watek 1 - while (blocked[1 - id]) --------- TRUE
+mimo tego przeczytalismy jako FALSE
+
+watek 0 - while (true)
+watek 0 - blocked[id] = true;
+watek 0 - while (turn != id) --------- FALSE
+watek 0 - /* put code to execute in critical section here */
+
+watek 1 - turn = id;
+watek 1 - /* put code to execute in critical section here */
+
+
+
+
+
+zad. 7
+
+shared boolean blocked [2] = { false, false };
+shared int turn = 0;
+ 
+void P (int id) {
+    while (true) {
+        blocked[id] = true;
+        turn = 1 - id;
+        while ( blocked[1 - id] && turn == (1 - id) )
+           continue;
+        /* put code to execute in critical section here */
+        blocked[id] = false;
+      }
+ }
+
+ void main() { parbegin (P(0), P(1)); }
+
+Proces rozpoczyna pracę w sekcji krytycznej jezeli "while (blocked[1 - id] && turn == (1 - id))" jest fłaszywy.
+
+Załóżmy niewprost, że sekcję krytyczną wykonują w tym samym czasie dwa procesy. Bez starty ogólności załóżmy, że P0 jako pierwszy wszedł do sekcji krytycznej.
+
+Żeby to zrobić musiał najpierw wykonać:
+blocked[0] = true
+turn = 1
+
+Przypadki, przy któ©ych P0 mógł wejsć do sekcji krytycnzej (warunek while):
+1. blocked[1] = false
+2. turn != 1
+3. 1 & 2
+
+Zgodnie z założeniem drugi do sekcji krytycznej dostaje się P1, lecz aby tak się stało musi zachodzić jedno z:
+1. blocked[0] = false
+2. turn != 0
+3. 1 & 2
+
+Jesli P0 jest w sekcji krytycznej to blocked[0] == true, wiec pierwszy warnnek dla dla P1 jest niespelniony
+
+Jesli P0 weszlo do sekcji krytycznej z turn == 1 to oznaczae, ze blocked[1] == false czyli P1 musial byc w tym momencie jeszcze przed linijka 6. Oznacza to, ze aby P1 dotartlo z tego miejsca do warunku whilea, po drodze bedzie musialo uniemozliwc sobie dostep wykonujac turn = 1 - id
+
+SPRZECZNOSC
+
+
+
+
+
+
+
+zad. 9
+
+problem producent-konsument - występują dwa procesy - producent i konsument, którzy dzilą wspólny zasób - bufor - dla produkowanych i konsumowanych jednostek. Zadaniem producenta jest wytworzenie jest wytworzenie produktu, umieszczenie go w buforze i rozpoczęcie pracy od nowa. W tym samym czasie konsument ma pobrać produkt z bufora. Problemem jest taka synchronizacja procesów, zeby producent nie dodawal nowych jednostek gdy bufor jest pełny, a konsument nie pobierał gdy bufor jest pusty.
+
+
+?? Wskaż przeplot instrukcji, który
+doprowadzi do (a) błędu wykonania w linii 6 i 13 (b) zakleszczenia w liniach 5 i 12.
+
+a) błąd wykonania linii 6 i 13
+
+P0 - producent
+P1 - konsument
+
+n = 1
+Kolejka pusta
+
+P0: 3,4,6
+Kolejka pełna
+P0: 7,8,3,4,5
+P1: 11, 13, 14
+P0: 2,3,4,6
+Kolejka pełna
+P0: 7, 8, 3, 4, 5
+P1: 15
+P0: 6
+
+Producent dokłada item pomimo,
+że kolejka jest pełna.
+
+b) zakleszczenie w liniach 5 i 12
+
+P0 - producent
+
+P1 - konsument
+
+n = 1
+
+Kolejka pusta
+
+P0: 3,4
+P1: 11
+P0: 6
+Kolejka pełna
+P0: 7, 8, 3, 5
+P1: 12

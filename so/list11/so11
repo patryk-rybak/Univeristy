@@ -1,0 +1,298 @@
+zad. 1
+
+?? Wyjaśnij czym są punkty montażowe, a następnie wyświetl listę zamontowanych systemów plików i wyjaśnij co znajduje się w poszczególnych kolumnach wydruku.
+
+Punkt montażowy to katalog, który jest logicznie połączony z innym systemem plków np. procfs, dysk USB, itp
+
+punkty montażowe są często używane do łączenia innych partycji dysków, urządzeń sieciowych lub zewnętrznych zasobów do bieżącego systemu plików
+
+
+findmnt will list all mounted filesystems or search for a filesystem. The findmnt command is able to search in /etc/fstab, /etc/mtab or /proc/self/mountinfo. If
+       device or mountpoint is not given, all filesystems are shown.
+
+$ findmnt
+
+    TARGET: It shows target mount pointa - Określa punkt montażowy, czyli katalog, do którego jest zamontowany system plików.
+    SOURCE: It shows the source device - Może to być ścieżka do urządzenia blokowego (np. /dev/sda1), ścieżka do punktu montażowego sieciowego lub inny rodzaj źródła danych.
+    FSTYPE: It shows the type of file system - Wskazuje na rodzaj systemu plików
+    OPTIONS: It will show the file system mount options - Przedstawia dodatkowe opcje montażu systemu plików. 
+
+$ findmnt -D
+
+$ df
+
+This  manual  page documents the GNU version of df.  df displays the amount of disk space available on the file system containing each file name argument.  If no file
+       name is given, the space available on all currently mounted file systems is shown.  Disk space is shown in 1K blocks  by  default,  unless  the  environment  variable
+       POSIXLY_CORRECT is set, in which case 512-byte blocks are used.
+
+
+?? Które z punktów montażowych dają dostęp do instancji pseudo systemów plików?
+
+pseudo systemy plikow - trzyma informacje o obecnej sesji systemu. Nie zostaje ona po ponownych uruchomieniach. Zamiast plików ma wpisy wirtualne które system tworzy na bieżąco np. /proc na wielu systemahc operacyjnych dynamicznie generuje katalogi dla każdego procesu
+Pliki nie jestnieją i są generowane podczas dostępu do nich
+
+są też Tymczasowe systemy Plików - Systemu w ktorych pliki są usuwane podczas restartu systemu
+
+
+odp.:
+
+pseudo filesystems: sysfs (/sys), procfs (/proc), debugfs (/sys/kernel/debug), configfs (/sys/kernel/config), tracefs (/sys/kernel/tracing)
+
+temporary filesystems: tmppfs (/dev/shm, /run, /sys/fs/cgroup, /tmp/, /var/volatile, /run/user/<id>), devtmpfs (/dev)
+
+
+?? Na podstawie mount(8) wyjaśnij znaczenie następujących atrybutów punktów montażowych: «relatime», «noexec» i «nodev», a następnie podaj scenariusz, w którym ich zastosowanie jest pożądane.
+
+relatime - Update inode access times relative to modify or change time. Access time
+           is only updated if the previous access time was earlier than the current
+           modify or change time.
+
+noexec - Do not permit direct execution of any binaries on the mounted filesystem.
+
+nodev - Do not interpret character or block special devices on the filesystem.
+Nie pozwala to systemowi plików tworzyć urządzeń znakowych i zabiera dostęp do hardware’u komputera.
+
+Zasosowania:
+
+noexec - zabezpieczenie przy instalacji niepewnych pendriveow
+
+relatime - przyklad serwera www, w ktorym uzytkownik czesto modyfikuje plik. Informacja o updatecie bedzie zmieniana np. conajwyzej raz dziennie
+
+nodev - rowniez zabezpieczenie przy instalacji niepewnych pendrivow
+
+
+
+
+
+
+
+zad. 2
+
+?? Korzystając z pól superbloku (ang. superblock) podaj wzór na wyliczenie wartości: rozmiaru bloku, liczby i-węzłów i bloków przechowywanych w grupie bloków (ang. block group), liczby wpisów tablicy deskryptorów grup bloków (ang. block group descriptor table)
+
+superblock - 
+
+the superblock contains all the information about the configuration of the filesystem. The information in the superblock contains fields such as the total number of inodes and blocks in the filesystem and how many are free, how many inodes and blocks are in each block group, when the filesystem was mounted (and if it was cleanly unmounted), when it was modified, what version of the filesystem it is and which OS created it. 
+
+ The primary copy of the superblock is stored at an offset of 1024 bytes from the start of the device, and it is essential to mounting the filesystem. Since it is so important, backup copies of the superblock are stored in block groups throughout the filesystem. 
+
+blocks - 
+
+A partition, disk, file or block device formated with a Second Extended Filesystem is divided into small groups of sectors called “blocks”. These blocks are then grouped into larger units called block groups. 
+
+The size of the blocks are usually determined when formatting the disk and will have an impact on performance
+
+block group - 
+
+Blocks are clustered into block groups in order to reduce fragmentation and minimise the amount of head seeking when reading a large amount of consecutive data. 
+
+
+block group descriptor table -
+
+The block group descriptor table is an array of block group descriptor, used to define parameters of all the block groups. It provides the location of the inode bitmap and inode table, block bitmap, number of free blocks and inodes, and some other useful information. 
+
+The block group descriptor table starts on the first block following the superblock. This would be the third block on a 1KiB block file system, or the second block for 2KiB and larger block file systems. Shadow copies of the block group descriptor table are also stored with every copy of the superblock. 
+
+Depending on how many block groups are defined, this table can require multiple blocks of storage. Always refer to the superblock in case of doubt. 
+
+Deskryptory grup (GDs) przechowują położenie
+i rozmiar bitmapy zajętości bloków i i-węzłów każdej grupy bloków.
+SB i GDs są przechowywane w BG 0, a ich kopie w wyróżnionych BG i
+
+
+wzory na wyliczenie:
+	
+
+	rozmiaru bloku:
+s_log_block_size
+
+The block size is computed using this 32bit value as the number of bits to shift left the value 1024. This value may only be non-negative.
+
+block size = 1024 << s_log_block_size;
+    
+Common block sizes include 1KiB, 2KiB, 4KiB and 8Kib. For information about the impact of selecting a block size, see Impact of Block Sizes. 
+
+
+	liczby i-węzłów i bloków przechowywanych:
+s_inodes_count
+
+s_inodes_per_group
+
+32bit value indicating the total number of inodes per group. This is also used to determine the size of the inode bitmap of each block group. Note that you cannot have more than (block size in bytes * 8) inodes per group as the inode bitmap must fit within a single block. This value must be a perfect multiple of the number of inodes that can fit in a block ((1024<<s_log_block_size)/s_inode_size). 
+	
+
+	liczby wpisów tablicy deskryptorów grup bloków:
+wpisów jest tyle samo ile grup bloków więc mamy
+	odp.: 	s_blocks_count / s_blocks_per_group
+
+
+
+?? Wymień składowe należące do grupy bloków oraz podaj ich rozmiar w blokach.
+
+Na grupę bloków składają się:
+
+
+    SuperBlock - 1 blok
+    Group Descriptors - s_blocks_count/s_blocks_per_group * 32 bytes (z dokumentacji) / block_size
+    Data(block) Bitmap 1 blok
+    Inode Bitmap 1 blok
+    Inode Table s_inodes_per_group * inode_size / block_size
+    Data Blocks s_blocks_per_group
+
+
+
+?? Które grupy bloków przechowują kopie zapasową superbloku i tablicy deskryptorów grup bloków?
+
+Domyślnie superblok i tablica deskryptorów bloków jest kopiowana do każdej grupy bloków. Wraz z pierwszą rewizją ext2 została wprowadzona opcja przechowania superbloku i tablicy deskryptorów grup bloków jedynie w niektórych grupach bloków, a konkretnie takich o następujących numerach: 0, 1 oraz potęgi 3, 5 i 7.
+
+
+
+
+zad. 3
+
+apolecenie:
+Podstawowymi operacjami na systemie plików są: wyzeruj lub zapal bit w bitmapie i-węzłów
+albo bloków, wczytaj / zapisz i-węzeł albo blok pośredni (ang. indirect block) albo blok danych. Podaj listę
+kroków niezbędnych do realizacji funkcji dopisującej n bloków na koniec pliku. Zakładamy, że poszczególne
+kroki funkcji są zawsze wdrażane synchronicznie. Zadbaj o to by funkcje nie naruszyły spójności systemu
+plików w przypadku awarii zasilania. Dopuszczamy powstawanie wycieków pamięci.
+
+
+blok posredni - blok, ktory zawiera wskazniki na inne bloki. Wykorzystywany, gdy plik zajmuje duzo miejsca i wymaga duzo blokow
+
+zapis synchroniczny - zapis, na ktorego zakonczenie czekamy i dopiero wtedy kontynuujemy prace. 
+
+spojnosc systemu plikow - sytuacja, w ktorej system plikow operauje na poprawnie zainicjalozowanych strukturach wewnetrznych - nie dochodzi do konfliktow wskaznikowm, nie zawiera wiszacych zasobow
+
+
+?? Podaj listę kroków niezbędnych do realizacji funkcji dopisującej n bloków na koniec pliku.
+
+- znajdz niezalakowany jeszcze blok i onzacz go jako zaalakowany,
+- zapisz do niego dane
+- sproboj dopisac blok z danymi do i-nodea pliku docelowego tzn.:
+	- sprobuj dopisac wskaznik do bloku bezposredniego
+	- jesli nie ma miejsca do sprobuj dopisac do listy blokow posrednich
+	- jesli w drzewie blokow posrednich nie ma miejsca to zaalokuj nowe bloki dla blokow posrednich
+	- powiaz ze soba nowo zaalokowane bloki (bloki posrednie bedziemy alokowac od dolu(lisica) do gory, by zapobiec problemom ze spojnoscia w przypadku awarii) ??? AWARIA ???
+	- dopis nową galaz blokow posrednich do i-nodea pliku docelowego
+- dopisz wskaznik na blok z danymi do i-nodea pliku, do ktorego chcemy dopisac dane
+- zaaktualizuj metadane i-nodea pliku docelowego czyli rozmiar ilosc uzywanych blokow
+- powtorz dopoki sa dane do zapisu
+
+
+
+
+zad. 4
+
+Operacja jest atomowa, gdy możemy założyć, że nie jest podzielona na żadne mniejsze operacje
+
+?? Czemu «rename» zakończy się błędem «EXDEV» kiedy próbujemy przenieść plik do innego systemu plików?
+
+Sposób reprezentacji oraz zawartość metadanych, czy reprezentacji katalogu może się różnić w zależnośći od systemu plików, dlatego używamy VFS, wtedy wystarczy aby każdy system plików dostarczył swoje sposoby odczytania metadanych. Nie możemy zatem na przykład wstawić reprezentacji i-węzła pomiędzy inne w pliku katalogu.
+
+
+?? Powtórz polecenia z zadania 3 dla funkcji przenoszącej
+plik między dwoma różnymi katalogami w obrębie tego samego systemu plików. Zakładamy, że w katalogu
+docelowym jest wystarczająco dużo miejsca na dodanie wpisu. Pamiętaj, że wpis katalogu nie może przecinać
+granicy między blokami!
+
+(przypominamy strukture katalogu)
+
+- nie musimy przpisywac blokow z danymi
+- Wstawiamy rekort katalogu do pliku katalogu, do ktorego przenosimy
+- zmniejszamy odleglos do kolejnego rekordu w poprzednim rekordzie wzgledem nowododanego
+- zwiekszamy odleglsoc do kolejnego rekordu w poprzednim rekordzie wzgledem satergo juz nieisteijacego rekordu)
+
+
+
+
+zad. 5
+
+?? Przy pomocy wywołania systemowego unlink(2) można usunąć plik niebędący katalogiem.
+Powtórz polecenia z zadania 3 dla funkcji usuwającej plik zwykły z katalogu.
+
+- sprowadzamy i-nodea i zmiejszamy jego links_counter o 1
+- sprowadzamy blok katalogu, zawierajacy wpis piliku i go uswamy
+- jezeli links_counter > 0 to KONIEC
+w p. p.
+- jesli istnieja otwarte deskryptory pliku, czekamy na ich zamkniecie
+- przechodzimy po kolejnych blokach wskazywanych przez i-nodea pliku i w ich grupach oznaczamy je jako wolne, oznaczamy tez i-nodea jako wolny
+- modyfikujemy superblock
+
+plik mozna przywrocic jezeli:
+- w inodzie pliku links_counter > 1
+- i-node pliku nie zostal nadpisany i wszsytkie bloki na ktore wskazuje tez nie zostaly nadpisane 
+
+
+Plik jest faktycznie usunięty, gdy wszystkie jego bloki zostaną nadpisane. Takie zachowanie można wymusić używając bezpiecznego usuwania. W systemie plików ext2 dostępna jest dla inode’ów flaga secure delete.
+
+
+
+zad. 6
+
+?? Wyjaśnij co robi system plików ext2 przy tworzeniu dowiązania twardego (ang. hard link) i symbolicznego (ang. symbolic link)
+
+- przy hard linku dodajemy nowy wpis do katalogu wskazujacy na linkowany inodea
+
+- przy symbolic tworzymy osobny i-węzeł zawierający ścieżkę do pliku, na który wskazuje.
+
+ It is a file on its own and can exist independently of its target. The symbolic links do not affect an inode link count. If a symbolic link is deleted, its target remains unaffected. If the target is moved, renamed or deleted, any symbolic link that used to point to it continues to exist but now points to a non-existing file. Symbolic links pointing to non-existing files are sometimes called “orphaned” or “dangling”.
+
+Symbolic links are also filesystem objects with inodes. For all symlink shorter than 60 bytes long, the data is stored within the inode itself; it uses the fields which would normally be used to store the pointers to data blocks. This is a worthwhile optimisation as it we avoid allocating a full block for the symlink, and most symlinks are less than 60 characters long.
+
+Symbolic links can also point to files or directories of other partitions and file systems. 
+
+
+?? Gdzie jest przechowywana zawartość dowiązania symbolicznego?
+
+jezeli zawartocs jest mniejsza niz 60 bajtow to trzymana jest na polach przeznaczonych pierwotnie na trzymanie wsakznikow to blokow
+jezeli zawartosc jest wieksza to wymagany jest osobny blok
+
+?? Jak za pomocą dowiązania symbolicznego stworzyć w systemie plików pętlę?
+
+$ ln -s link1 link2
+$ ln -s link2 link1
+
+?? Kiedy jądro systemu operacyjnego ją wykryje i zwróci błąd «ELOOP»?
+
+Istnieje maksymalna głębogość rozwinięcia rekurencyjnego ścierzki,
+gdy zostanie osiągnięta jądro zwraca ELOOP
+
+w strace cat link1 mozna znalezc:
+
+strace -o temp cat link1 
+cat temp | grep ELOOP
+openat(AT_FDCWD, "link1", O_RDONLY)     = -1 ELOOP (Too many levels of symbolic links)
+
+
+?? Czemu pętli nie da się zrobić z użyciem dowiązania twardego?
+
+Systemy Plików nie pozwalają na tworzenie wielu dowiązań do katalogu, między innymi aby uniknąć tworzenia pętli
+
+( ale co w takim razie z katalogami"." i ".."? )
+
+
+zad. 8
+
+1) 
+freefrag
+stats
+
+2)
+fallocate -l 17GB duzyplik
+sudo debugfs dump_extents /home/patrk/duzyplik /dev/nvme0n1p4
+
+3)
+ln -s /home/patryk/University/so/list8/so23... /home.patryk
+sudo debugfs /dev/nvme0n1p4
+inode_dump /home/patryk/so23...
+
+4)
+blocks sciezka do czegokolwiek
+icheck nr bloku - printuje nr inoda ktory z niego korzysta
+ncheck inode - printuje sciezke przez jakie mozna dostac do inodea
+
+5)
+blocks /home/usr/Downloads
+block_dump nr bloku
+

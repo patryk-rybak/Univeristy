@@ -8,14 +8,14 @@ fn first_n_smallest(arr: &[i32], n: usize) -> Vec<i32> {
         return arr.to_vec();
     }
     
-    // dlaczego nei into_inter() bez cloned() ?
-    let mut indexed_array: Vec<(usize, i32)> = arr.iter().cloned().enumerate().collect();
+    // dlaczego nei into_inter() bez cloned() ?     // dodalismy tutaj 
+    let mut indexed_array: Vec<(usize, &i32)> = arr.into_iter().enumerate().collect();
 
     indexed_array.sort_by_key(|&(_, v)| v);
 
-    let mut res: Vec<(usize, i32)> = indexed_array.into_iter().take(n).collect();
+    let mut res: Vec<(usize, &i32)> = indexed_array.into_iter().take(n).collect();
     res.sort_by_key(|&(i, _)| i);
-    res.into_iter().map(|(_, v)| v).collect()
+    res.into_iter().map(|(_, &v)| v).collect()
 }
 
 #[test]

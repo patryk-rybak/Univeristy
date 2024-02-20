@@ -11,7 +11,7 @@ przetwarzanie równoległe - występuje, gdy program dzieli zadania na mniejsze 
 
 ?? Czym charakteryzują się procedury wielobieżne (ang. reentrant)?
 
-To taka, której wykonanie może zostac przerwane przez sygnał i podczas tego przerwania może zostać jesczze raz bezpiecznei wywołana przed zakończeniem wcześniejszego.
+To taka, której wykonanie może zostac przerwane przez sygnał i podczas tego przerwania może zostać jesczze raz bezpiecznei wywołana przed zakończeniem wcześniejszego calla.
 
 - Taka procedura nie może korzystać z innych procedur niewielobieznych
 - Nie korzysta z operacji na zmiennych statycznych
@@ -129,7 +129,7 @@ omawialiśmy do tej pory. Co nieoczekiwanego może się wydarzyć w wielowątkow
 
 fork :
 
-he child process is created  with  a  single  thread—the  one  that
+the child process is created  with  a  single  thread—the  one  that
           called  fork().   The  entire virtual address space of the parent is
           replicated in the child, including the states of mutexes,  condition
           variables,  and other pthreads objects;
