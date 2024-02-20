@@ -1,2 +1,0 @@
-javac model/*.java view/*.java controller/*.java Main.java
-
