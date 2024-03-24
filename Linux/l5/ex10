@@ -1,0 +1,164 @@
+https://pl.wikipedia.org/wiki/D-Bus
+
+method call time=1711323003.980104 sender=:1.17 -> destination=:1.41 serial=1016 path=/org/Cinnamon; interface=org.Cinnamon; member=ShowOSD
+   array [
+      dict entry(
+         string "icon"
+         variant             string "display-brightness-symbolic"
+      )
+      dict entry(
+         string "level"
+         variant             int32 38
+      )
+      dict entry(
+         string "monitor_x"
+         variant             int32 0
+      )
+      dict entry(
+         string "monitor_y"
+         variant             int32 0
+      )
+   ]
+method call time=1711323003.980460 sender=:1.41 -> destination=:1.23 serial=62274 path=/org/cinnamon/SettingsDaemon/Power; interface=org.cinnamon.SettingsDaemon.Power.Screen; member=GetPercentage
+method return time=1711323003.985324 sender=:1.41 -> destination=:1.17 serial=62275 reply_serial=1016
+method call time=1711323003.988382 sender=:1.47 -> destination=org.gnome.Caribou.Keyboard serial=56883 path=/org/gnome/Caribou/Keyboard; interface=org.gnome.Caribou.Keyboard; member=SetCursorLocation
+   int32 0
+   int32 906
+   int32 8
+   int32 17
+method return time=1711323003.989026 sender=:1.23 -> destination=:1.41 serial=7262 reply_serial=62274
+   uint32 38
+method return time=1711323003.989299 sender=:1.41 -> destination=:1.47 serial=62276 reply_serial=56883
+method call time=1711323004.020475 sender=:1.47 -> destination=org.gnome.Caribou.Keyboard serial=56884 path=/org/gnome/Caribou/Keyboard; interface=org.gnome.Caribou.Keyboard; member=SetCursorLocation
+   int32 0
+   int32 906
+   int32 8
+   int32 17
+method return time=1711323004.021530 sender=:1.41 -> destination=:1.47 serial=62277 reply_serial=56884
+method call time=1711323004.053267 sender=:1.47 -> destination=org.gnome.Caribou.Keyboard serial=56885 path=/org/gnome/Caribou/Keyboard; interface=org.gnome.Caribou.Keyboard; member=SetCursorLocation
+   int32 0
+   int32 906
+   int32 8
+   int32 17
+method return time=1711323004.054219 sender=:1.41 -> destination=:1.47 serial=62278 reply_serial=56885
+method call time=1711323004.568578 sender=:1.47 -> destination=org.gnome.Caribou.Keyboard serial=56886 path=/org/gnome/Caribou/Keyboard; interface=org.gnome.Caribou.Keyboard; member=Hide
+   uint32 0
+method call time=1711323004.568950 sender=:1.41 -> destination=:1.17 serial=62279 path=/org/cinnamon/SettingsDaemon/KeybindingHandler; interface=org.cinnamon.SettingsDaemon.KeybindingHandler; member=HandleKeybinding
+   uint32 2
+method call time=1711323004.569692 sender=:1.17 -> destination=:1.41 serial=1017 path=/org/Cinnamon; interface=org.Cinnamon; member=ShowOSD
+   array [
+      dict entry(
+         string "icon"
+         variant             string "audio-volume-low-symbolic"
+      )
+      dict entry(
+         string "level"
+         variant             int32 30
+      )
+   ]
+
+
+
+
+
+
+
+
+
+
+
+method call time=1711323077.865413 sender=:1.47 -> destination=org.gnome.Caribou.Keyboard serial=57203 path=/org/gnome/Caribou/Keyboard; interface=org.gnome.Caribou.Keyboard; member=SetCursorLocation
+   int32 0
+   int32 906
+   int32 8
+   int32 17
+method return time=1711323077.866423 sender=:1.41 -> destination=:1.47 serial=62604 reply_serial=57203
+signal time=1711323086.687681 sender=:1.23 -> destination=(null destination) serial=7272 path=/org/cinnamon/SettingsDaemon/Power; interface=org.freedesktop.DBus.Properties; member=PropertiesChanged
+   string "org.cinnamon.SettingsDaemon.Power"
+   array [
+      dict entry(
+         string "Tooltip"
+         variant             string "Laptop battery 3 hours 35 minutes remaining (41%)"
+      )
+      dict entry(
+         string "Icon"
+         variant             string ". GThemedIcon battery-level-40-symbolic battery-good-symbolic gpm-battery-040 battery-good  battery-level-40 gpm-battery-040-symbolic -symbolic"
+      )
+   ]
+   array [
+   ]
+method call time=1711323086.688473 sender=:1.41 -> destination=:1.23 serial=62605 path=/org/cinnamon/SettingsDaemon/Power; interface=org.cinnamon.SettingsDaemon.Power; member=GetPrimaryDevice
+method return time=1711323086.688783 sender=:1.23 -> destination=:1.41 serial=7273 reply_serial=62605
+   struct {
+      string "/org/freedesktop/UPower/devices/battery_BAT0"
+      string "SUNWODA"
+      string "HB4593R1ECW-22S0"
+      uint32 2
+      string ". GThemedIcon battery-level-40-symbolic battery-good-symbolic gpm-battery-040 battery-good  battery-level-40 gpm-battery-040-symbolic -symbolic"
+      double 41
+      uint32 2
+      uint32 1
+      uint64 12937
+   }
+method call time=1711323086.690149 sender=:1.41 -> destination=:1.23 serial=62606 path=/org/cinnamon/SettingsDaemon/Power; interface=org.cinnamon.SettingsDaemon.Power; member=GetDevices
+method return time=1711323086.690675 sender=:1.23 -> destination=:1.41 serial=7274 reply_serial=62606
+   array [
+      struct {
+         string "/org/freedesktop/UPower/devices/line_power_ACAD"
+         string ""
+         string ""
+         uint32 1
+         string ". GThemedIcon ac-adapter-symbolic ac-adapter  -symbolic"
+         double 0
+         uint32 0
+         uint32 1
+         uint64 0
+      }
+      struct {
+         string "/org/freedesktop/UPower/devices/battery_BAT0"
+         string "SUNWODA"
+         string "HB4593R1ECW-22S0"
+         uint32 2
+         string ". GThemedIcon battery-level-40-symbolic battery-good-symbolic gpm-battery-040 battery-good  battery-level-40 gpm-battery-040-symbolic -symbolic"
+         double 41
+         uint32 2
+         uint32 1
+         uint64 12937
+      }
+   ]
+
+
+
+
+
+
+
+signal time=1711323077.849193 sender=:1.46 -> destination=(null destination) serial=11563 path=/org/x/StatusIcon/Icon; interface=org.freedesktop.DBus.Properties; member=PropertiesChanged
+   string "org.x.StatusIcon"
+   array [
+      dict entry(
+         string "TooltipText"
+         variant             string "Wi-Fi network connection “Auto stopki” active: stopki (66%)"
+      )
+   ]
+   array [
+   ]
+
+
+
+
+Jest to zwrócona metoda (method return), co oznacza, że poprzednio wywołana metoda została wykonana i zwrócona odpowiedź.
+time=1711322211.770450 - Czas, w którym zwrócono metodę.
+sender=:1.41 - Proces, który zwrócił metodę.
+destination=:1.47 - Proces, do którego metoda była skierowana.
+serial=60791 - Numer seryjny tej konkretnej komunikacji.
+reply_serial=55588 - Numer seryjny komunikacji, na którą ta jest odpowiedzią.
+
+time=1711322211.779040 - Czas wywołania metody.
+sender=:1.47 - Proces, który wywołał metodę.
+destination=org.gnome.Caribou.Keyboard - Cel, do którego jest kierowane wywołanie metody.
+serial=55589 - Numer seryjny tej konkretnej komunikacji.
+path=/org/gnome/Caribou/Keyboard - Ścieżka do obiektu, na którym jest wywoływana metoda.
+interface=org.gnome.Caribou.Keyboard - Interfejs, który zawiera metodę, która zostanie wywołana.
+member=SetCursorLocation - Nazwa metody, która jest wywoływana.
+Następnie są przekazane parametry metody: cztery wartości typu int32.

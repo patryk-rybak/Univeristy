@@ -1,0 +1,61 @@
+Zapoznaj się z poleceniami lsof(8) i fuser(1).
+
+
+lsof(8)
+
+lsof - list open files
+
+       An  open  file  may be a regular file, a directory, a block special file, a character special file, an executing text reference, a library, a stream or a network file
+
+jezeli podany my sciezke do pliku to wyswietli kto ma otworzony podany plik
+
+ciekawsze falgi:
+
+-u username - wyswitla otwarte pliki przez jakiegos usera
+-c nazwa - otworzone pliki przez procesy o okreslonej nazwie
+-p pid - pliki otwarte przez dany proces
+-i - otwarte polaczenia siecioe (-i TCP:port)
+-t plik - wyswietla tylko pidy procesow majacych otworzony dany plik
+
+    COMMAND: Nazwa komendy (procesu), który korzysta z otwartego pliku lub połączenia sieciowego.
+
+    PID: Numer identyfikacyjny procesu (Process ID), który otworzył plik lub nawiązał połączenie sieciowe.
+
+    USER: Nazwa użytkownika, do którego należy proces.
+
+    FD: Deskryptor pliku (File Descriptor) lub inny deskryptor (np. deskryptor połączenia sieciowego). Może to być również deskryptor specjalny, tak jak cwd (bieżący katalog), rtd (katalog główny) itp.
+
+    TYPE: Typ otwartego zasobu, na przykład REG dla zwykłego pliku, DIR dla katalogu, FIFO dla potoku, CHR dla urządzenia znakowego, unix dla gniazda Unix itp.
+
+    DEVICE: Numer urządzenia (major i minor), na którym znajduje się otwarty zasób.
+
+    SIZE/OFF: Rozmiar pliku lub przesunięcie w pliku.
+
+    NODE: Numer węzła (inode) pliku.
+
+    NAME: Ścieżka do otwartego pliku lub opis połączenia sieciowego.
+
+
+
+fuuser(1)
+
+fuser - identify processes using files or sockets
+
+Poleceniem fuser(1) możemy zidentyfikować procesy używające plików bądź gniazd. Działa on bardzo podobnie do lsof, jednak umożliwia jedną rzecz, której nie posiada lsof - chodzi o zabijanie procesów flagą -k. Aby to samo wykonać za pomocą lsof, należałoby przekazać listę PIDów do polecenia kill, chociażby w taki sposób
+
+kill -9 $(lsof -t [path])
+
+a z fuser wystarczy:
+
+fuser -km /home
+
+
+roznica miedzy lsof i ruser jest taka ze fuser wyswietla same indentyfikatory a lsof wiecej informacji, fuser ma flage -k (kill) lsof nie ma
+
+
+Jak ujawnić wszystkie pliki otwarte przez podany proces?
+lsof -p pid
+Jak sprawdzić, który proces otworzył dany plik?
+lsof plik
+Jak ujawnić wszystkie pliki otwarte przez podanego użytkownika?
+lsof -u username

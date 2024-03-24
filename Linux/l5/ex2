@@ -1,0 +1,94 @@
+
+
+ls(1)
+
+jego opcje to:
+
+-a - rowniez wpisy rozpoczynajace sie od .
+-A - wszysktie poza rozpoczynajacymi sie od .
+-b - wypisuje znaki ucieczki np. zamaist "nazwa pliku" bedzie nazwa\ pliku
+-B - nie wypisuje wpisow konczoncych sie ~ (kopie zapasowe ?)
+-c - pokazuje ostatni czas modyfikacji (ctime)
+-C - wyswietla wpisy w kolumnach 
+-d - list directories themselves, not their contents
+-f - nie sortuej, wylacza kolorowanie i wyswietla z porzadkiem katalogowym
+-F - append indicator
+	* dla wykonywalnych
+	/ dla katalogow
+	@ dla likow symbolicznych
+	= dla gniazd
+	cos jeszcze dla urzadzen blokowych
+-g - like -l but do not list owner
+-G - do not print group names in long listings
+-h - czytelniejszy rozmiar
+-H - follow symbolic links
+-i - show inode number
+-l - long listing format
+-L - show information about file the link referecnes rather then for link itself
+-n - like -l but list numeric user and grup IDs
+-r - reverse order in sorting
+-R - list subdirectors recursivly
+-s - print allocated size in blocks for each file
+-S - sort by size
+-t - sort by time
+-U - list in direcotry order
+
+
+stat(1)
+
+stat - display file or file system status
+
+  File: Desktop/
+  Size: 4096      	Blocks: 8          IO Block: 4096   directory
+Device: 10304h/66308d	Inode: 3941035     Links: 2
+Access: (0755/drwxr-xr-x)  Uid: ( 1000/  patryk)   Gid: ( 1000/  patryk)
+Access: 2024-03-22 14:27:41.373251058 +0100
+Modify: 2024-03-01 21:19:02.415678798 +0100
+Change: 2024-03-01 21:19:02.415678798 +0100
+ Birth: 2023-05-14 21:55:15.201004750 +0200
+
+moze jedyna niejasnosc - device to id urzadzenia na ktorym nzajduje sie systemp plikow zawierajacy sprawdzany plik
+
+
+readlpath(1)
+
+dokleja pwd do argumentow jakoby to byl poczatek sciezki, ale arguemty wcale nie musza istenic
+dodatkowo jezeli arguemtn to musi istneic i to z katalogu w ktorym se znajdujemy
+
+-m - ignorowanie tego, że ścieżka nie istnieje
+-e - wymóg istnienia wszystkich składowych ścieżki 
+-P - rozpatrywanie dowiązań symbolicznych
+--relative-to=DIR - wypisanie ścieżki w stosunku do DIR
+s - nie rozszerzaj dowiązań symbolicznych
+
+
+readlink(1)
+
+zwraca po porstu zawartosc linku czyli wzgledna sciezke tego na co wskazuje
+
+
+readdir(1)
+
+usuwa z argumentu najbardzeij zagneizdzona czesc sciezki i otrzymana w taki sposb sciezek do katalogu, ktry zawieral podnay wczesniej plik
+arguemnt nie musi istniec
+jzeli podamy arguemnt bez "\" to traktowane to jest tako .\arguemnt i zwracane jest .
+
+
+basename(1)
+
+odwrotne dzialanie do readdir(1)
+jezeli wyspecyfikowany sifux to go tez usuwa (np .rozszerzeniepliku)
+
+
+ Przygotuj krótkie omówienie sposobów odczytywania infor-
+macji o plikach i katalogach
+
+...
+
+
+for IMG in *.jpg
+do
+convert $IMG $(basename $IMG .jpg).png
+done
+
+przechodzi po plikach z koncowka .jpg w bierzacym katalogu, zostawia sama nazew bez sufixu, dopkleja nowy sufix i konwertuje

@@ -1,0 +1,43 @@
+strace(1)
+
+mozna powiedziec, ze bada interakcje z jadrem
+sledzi syscalle oraz obierane sygnaly
+
+ostatnimi ostatnimi argumentami strace powinny byc badany program i jego argumenty
+
+wazniejsze funkcjinalnosci:
+
+		-e pozwala okreslic co dokladnie chcemy sledzic np. trace=execve
+
+			trace -e trace=<syscall1>,<syscall2> /bin/cat
+
+	   -c
+       --summary-only
+                   Count  time,  calls,  and  errors for each system call and report a summary on program exit, suppressing the regular output.  This attempts to show system
+                   time (CPU time spent running in the kernel) independent of wall clock time.  If -c is used with -f, only aggregate totals for  all  traced  processes  are
+                   kept.
+
+
+       -C
+       --summary   Like -c but also print regular output while processes are running.
+
+
+
+       -T
+       --syscall-times[=precision]
+                   Show the time spent in system calls.
+
+		-o [nazwa pliku] 
+				   Przekierowuje wyjscie do pliku
+
+
+Filtering w manualu
+
+		strace -e trace=network -p <pid> (np. firefox)
+
+rowniez flaga -f jest ciekawa - pozwala na sledzenie procesow potomnych
+
+		strace -f -e trace=open,read,write,execve /bin/bash
+
+	
+

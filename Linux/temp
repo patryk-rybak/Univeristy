@@ -1,0 +1,5 @@
+for IMG in *.jpg
+do
+echo $IMG
+#convert $IMG $(basename $IMG .jpg).png
+done

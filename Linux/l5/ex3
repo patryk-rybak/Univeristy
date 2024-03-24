@@ -1,0 +1,145 @@
+hostname(5)
+
+The /etc/hostname file configures the name of the local system. Unless
+       overridden as described in the next section, systemd(1) will set this
+       hostname during boot using the sethostname(2) system call.
+
+
+machine-id(5)
+
+The /etc/machine-id file contains the unique machine ID of the local
+       system that is set during installation or boot.
+
+The machine ID is usually generated from a random source during system
+       installation or first boot and stays constant for all subsequent boots.
+
+The machine ID does not change based on local or network configuration
+       or when hardware is replaced.
+
+This ID uniquely identifies the host. It should be considered
+       "confidential", and must not be exposed in untrusted environments, in
+       particular on the network. If a stable unique identifier that is tied
+       to the machine is needed for some application, the machine ID or any
+       part of it must not be used directly. Instead the machine ID should be
+       hashed with a cryptographic, keyed hash function, using a fixed,
+       application-specific key. That way the ID will be properly unique, and
+       derived in a constant way from the machine ID but there will be no way
+       to retrieve the original machine ID from the application-specific one.
+
+
+os-release(5)
+
+ Operating system identification
+
+SYNOPSIS
+       /etc/os-release
+
+       /usr/lib/os-release
+
+       /etc/initrd-release
+
+Ogólnie rzecz biorąc, plik os-release zawiera metadane dotyczące dystrybucji systemu operacyjnego Linux. Może zawierać informacje, takie jak nazwa dystrybucji, numer wersji, identyfikator wersji, nazwa hosta
+
+    NAME: Ten wpis zawiera nazwę dystrybucji systemu operacyjnego. Na przykład, "Ubuntu", "Fedora", "Debian" itp.
+
+    VERSION: Wpis VERSION zawiera pełną wersję dystrybucji, często wraz z dodatkowymi informacjami, takimi jak typ wydania (LTS - Long Term Support) lub nazwa kodowa. Przykładem może być "20.04.1 LTS (Focal Fossa)".
+
+    ID: Wpis ID zawiera identyfikator dystrybucji, który może być używany do identyfikacji systemu operacyjnego. Na przykład, "ubuntu", "fedora", "debian" itp.
+
+    ID_LIKE: Wpis ID_LIKE zawiera listę identyfikatorów dystrybucji, które są powiązane z aktualnym systemem. Na przykład, jeśli system jest oparty na Debianie, to ten wpis może zawierać "debian".
+
+    HOME_URL: Wpis HOME_URL zawiera adres URL strony głównej dystrybucji.
+
+    SUPPORT_URL: Wpis SUPPORT_URL zawiera adres URL strony wsparcia technicznego dystrybucji.
+
+    BUG_REPORT_URL: Wpis BUG_REPORT_URL zawiera adres URL, pod którym użytkownicy mogą zgłaszać błędy dotyczące dystrybucji.
+
+    VERSION_CODENAME: Wpis VERSION_CODENAME zawiera kodową nazwę wersji systemu operacyjnego. Na przykład, "focal" w przypadku Ubuntu 20.04.
+
+    UBUNTU_CODENAME: Wpis UBUNTU_CODENAME jest specyficzny dla systemu Ubuntu i zawiera kodową nazwę wersji Ubuntu.
+
+    Inne wpisy: Oprócz wymienionych wyżej, plik os-release może zawierać także inne wpisy, które dostarczają dodatkowych informacji o systemie operacyjnym, takich jak identyfikator sprzętu (HARDWARE_ID), architektura (ARCHITECTURE), identyfikator systemu (PRETTY_NAME), czas wydania (BUILD_DATE) itp.
+
+
+
+
+hostname(1)
+
+Hostname is used to display the system's DNS name, and to display or set its hostname or NIS domain name.
+
+
+
+hostnamectl(1)
+
+hostnamectl - Control the system hostname
+
+hostnamectl may be used to query and change the system hostname and
+       related settings.
+
+to samo co hostname ale bardziej rozbudowane (?)
+
+
+uuid(1)
+
+(pobralem jakas paczke ale to chyba nie to) 
+
+Universally Unique Identifier Command-Line Tool
+
+
+uuidgena(1)
+
+The uuidgen program creates (and prints) a new universally unique
+       identifier (UUID) using the libuuid(3) library. The new UUID can
+       reasonably be considered unique among all UUIDs created on the local
+       system, and among UUIDs created on other systems in the past and in the
+       future.
+
+       There are three types of UUIDs which uuidgen can generate: time-based
+       UUIDs, random-based UUIDs, and hash-based UUIDs. By default uuidgen
+       will generate a random-based UUID if a high-quality random number
+       generator is present. Otherwise, it will choose a time-based UUID. It
+       is possible to force the generation of one of these first two UUID
+       types by using the --random or --time options.
+
+
+
+dbus-uuidgen(1)
+
+to samo co wyzej (?)
+
+
+ogolnie to tak:
+uuid: Jest to polecenie, które służy do wyświetlania informacji na temat identyfikatorów UUID (Universally Unique Identifier) znajdujących się w różnych plikach systemowych. Może wyświetlać informacje o identyfikatorach UUID, takich jak wersja, typ, czas utworzenia itp. Nie generuje ono jednak nowych identyfikatorów UUID.
+
+uuidgen: To polecenie generuje nowe identyfikatory UUID na podstawie bieżącego czasu i losowych wartości. Jest to przydatne narzędzie, gdy potrzebujesz wygenerować nowy identyfikator UUID do użytku w Twojej aplikacji lub systemie. UUID generowane przez uuidgen są globalnie unikalne i mają różne wersje (np. v1, v4, v5).
+
+dbus-uuidgen: To narzędzie jest specyficzne dla D-Bus (Desktop Bus), magistrali komunikacyjnej używanej w systemach Unixowych do komunikacji między procesami. dbus-uuidgen generuje identyfikatory UUID, które są wykorzystywane w kontekście D-Bus do identyfikacji różnych elementów, takich jak serwisy, obiekty, interfejsy itp. UUID generowane przez dbus-uuidgen są również globalnie unikalne, ale mogą być zoptymalizowane dla użycia w D-Bus
+
+
+uname(1)
+
+ uname - print system information
+
+Wypisanie informacji o systemie, takich jak nazwa jądra, jego wydanie i wersja, typ procesora (architektura), nazwa systemu operacyjnego.
+
+
+lsb_release(1)
+
+lsb_release - print distribution-specific information
+
+
+
+Przygotuj krótkie omówienie sposobów identyfikacji dystrybucji Linuksa oraz konkretnej instalacji
+
+wiec tak o:
+uname -a, hostnamectl, lsb_release -a
+jeszce takie cos:
+cat /proc/version
+	output: Linux version 5.4.0-94-generic (buildd@lcy01-amd64-012) (gcc version 9.3.0 (Ubuntu 9.3.0-17ubuntu1~20.04)) #105-Ubuntu SMP Wed Sep 22 15:06:36 UTC 2021
+    Linux version: Numer wersji jądra Linuxa.
+    5.4.0-94-generic: Konkretna wersja jądra, w tym numer wersji oraz dodatkowe informacje, takie jak typ (w tym przypadku "generic").
+    buildd@lcy01-amd64-012: Informacje dotyczące budowania jądra, w tym nazwa użytkownika i hosta, na którym zostało zbudowane jądro.
+    gcc version 9.3.0 (Ubuntu 9.3.0-17ubuntu1~20.04): Wersja kompilatora GCC (GNU Compiler Collection), który został użyty do skompilowania jądra, w tym dodatkowe informacje o wersji kompilatora oraz dystrybucji systemu.
+
+no a rozrownienie instalacji moze byc przez hostname, no i wiadomo ze jeszcze z pomocą cat /etc/machine-id ktore tez wyswietla polecenie hostnamectl
+
