@@ -1,0 +1,8 @@
+zad.3
+
+Konfiguracja środowiska użytkownika: Folder profil zawiera skrypty (zwykle skrypty powłoki, takie jak bash), które są wykonywane przy logowaniu każdego użytkownika. Te skrypty pozwalają na ustawienie zmiennych środowiskowych, zdefiniowanie aliasów, uruchamianie specyficznych poleceń itp., dostosowując tym samym środowisko pracy użytkownika do jego preferencji
+
+Ustawienia globalne: Może również zawierać ustawienia globalne, które mają zastosowanie do wszystkich użytkowników. Na przykład, administrator systemu może umieścić w folderze profil skrypty konfiguracyjne, które będą miały wpływ na zachowanie się wszystkich użytkowników systemu.
+
+
+

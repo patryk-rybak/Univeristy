@@ -1,0 +1,13 @@
+#!/bin/bash
+
+total_size=0
+while [ "$#" -gt 0 ]; do
+    ((total_size+=$(du -b "$1" | awk '{print $1}')))
+    shift
+done
+df --block-size=1 | while read fs; do
+	if [ $(echo $fs | awk '{print $2}') -ge $total_size ] 2> /dev/null; then
+		echo "$(echo "$fs" | awk '{print $6}')"
+	fi
+done
+exit

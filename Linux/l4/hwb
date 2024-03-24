@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+function help_fn {
+	echo "Usage: $program_name [OPTIONS]"
+    echo "Options:"
+    echo -e "  -c, --capitalize:\t\tPrint the name or word in uppercase."
+    echo -e "  --color=[never | auto | always]:\tColorize names (never, auto if the standard output is a terminal, always), similar to the option in the ls(1) program."
+    echo -e "  -g text, --greeting=text:\tReplace the word Hello with the provided text."
+    echo -e "  -h, --help:\t\t\tPrint a brief help message."
+    echo -e "  -v, --version:\t\tPrint the program's name, version, and copyright."
+    echo -e "  -w, --world:\t\t\tAdditionally print the line Hello, world."
+}
+
+function version_fn {
+	echo "$program_name 1.0"
+}
+
+function print_fn {
+	local RES=$1
+	local RED=$'\e[31m'
+	local RESET=$'\e[0m'
+
+	if [ $CAPITALIZE -eq 1 ];then
+		RES=${RES^^}
+	fi
+
+	if [ $COLOR = always ];then
+		RES=$RED$RES
+	elif [ $COLOR = auto ] && [ -t 1 ];then
+		RES=$RED$RES
+	fi
+
+	echo $GREETING, $RES$RESET!
+}
+
+program_name="${0#./}"
+ARGS=$(getopt -o cg:hvw -l capitalize,color:,greeting:,help,version,world -n $program_name -- "$@")
+
+if [ $? -ne 0 ] || [ $# -eq 0 ]; then
+	echo Try $program_name --help for more information.
+	exit 1
+fi
+
+eval set -- $ARGS
+
+CAPITALIZE=0
+COLOR=auto
+GREETING=Hello
+
+while [ $# -ne 0 ]; do
+		case $1 in
+				-c | --capitalize)
+					CAPITALIZE=1;;
+				--color)
+					shift
+					if [ $1 = auto ] || [ $1 = never ] || [ $1 = always ]; then
+						COLOR=$1
+					else
+						echo "$program_name: option --color invalid argument"
+						echo "Try $program_name --help for more information."
+						exit 1
+					fi;;
+				-g | --greeting)
+					shift
+					GREETING=$1;;
+				-h | --help)
+					help_fn
+					exit 1;;
+				-v | --version)
+					version_fn
+					exit 1;;
+				-w | --world)
+					set -- "$@" "world";;
+				--)
+					shift
+					break;;
+		esac
+		shift
+done
+
+while [ $# -ne 0 ]; do
+	print_fn $1
+	shift
+done
+exit
+
+--      If no arguments follow this option, then the positional parameters are unset.  Otherwise, the positional parameters are set to the args, even  if  some
+of them begin with a -.
+
+

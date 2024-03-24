@@ -1,0 +1,18 @@
+#!/bin/bash
+
+FILES=$(find "$2" -type f -printf "%T@\t%s\t%p\n" | sort -n)
+total_size=0
+IFS=$'\n'
+for file in $FILES; do
+	(( total_size+=$(echo $file | awk '{print $2}') ))
+done
+#echo total_size: $total_size
+for file in $FILES; do
+	[ $total_size -le $1 ] && exit
+	(( total_size-=$(echo $file | awk '{print$2}') ))
+	echo $(awk -F'\t' '{print $3}' <<< "$file")
+	#echo total to limit: $total_size $1
+done
+
+
+
