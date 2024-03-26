@@ -4,6 +4,7 @@ The /etc/hostname file configures the name of the local system. Unless
        overridden as described in the next section, systemd(1) will set this
        hostname during boot using the sethostname(2) system call.
 
+Hostname jest często używany do komunikacji między innymi komputerami w sieci oraz do identyfikacji maszyny w sieciach lokalnych,
 
 machine-id(5)
 
@@ -25,6 +26,14 @@ This ID uniquely identifies the host. It should be considered
        application-specific key. That way the ID will be properly unique, and
        derived in a constant way from the machine ID but there will be no way
        to retrieve the original machine ID from the application-specific one.
+
+jednoznacznie zidentyfikować daną maszynę w sieci lub w lokalnym środowisku.
+
+wykorzystywany w procesie konfiguracji sieciowej, na przykład do generowania unikalnych adresów IP
+
+rozpoznawania, czy dany system został już wcześniej skonfigurowany lub uruchomiony
+
+
 
 
 os-release(5)
@@ -62,6 +71,17 @@ Ogólnie rzecz biorąc, plik os-release zawiera metadane dotyczące dystrybucji 
 
 
 
+/etc/debian_version zawiera informacje o wersji systemu operacyjnego Debian lub systemu opartego na Debianie
+
+bookworm/sid, oznacza to, że system jest oparty na wersji Debian o nazwie kodowej "bookworm", która jest często używana jako kodowa nazwa dla wersji testowych 
+
+sid" oznacza wersję niestabilną Debiana, która jest znana jako "Sid" - nazwana na cześć niekończącego się chłopca z filmu "Toy Story
+
+
+
+
+
+
 
 hostname(1)
 
@@ -86,7 +106,7 @@ uuid(1)
 Universally Unique Identifier Command-Line Tool
 
 
-uuidgena(1)
+uuidgen(1)
 
 The uuidgen program creates (and prints) a new universally unique
        identifier (UUID) using the libuuid(3) library. The new UUID can

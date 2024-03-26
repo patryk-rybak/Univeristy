@@ -37,9 +37,11 @@ ciekawsze falgi:
 
 
 
-fuuser(1)
+fuser(1)
 
 fuser - identify processes using files or sockets
+
+fuser -m Documents/
 
 Poleceniem fuser(1) możemy zidentyfikować procesy używające plików bądź gniazd. Działa on bardzo podobnie do lsof, jednak umożliwia jedną rzecz, której nie posiada lsof - chodzi o zabijanie procesów flagą -k. Aby to samo wykonać za pomocą lsof, należałoby przekazać listę PIDów do polecenia kill, chociażby w taki sposób
 
